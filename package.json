@@ -2,68 +2,32 @@
   "name": "batch-person-change",
   "private": true,
   "version": "1.0.0",
-  "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "server": "node server.js",
-    "clean": "rm -rf release dist dist-electron",
-    "build": "npm run clean && vue-tsc -b && vite build && electron-builder -p never",
-    "build:mac": "npm run clean && vue-tsc -b && vite build && electron-builder --mac -p never",
-    "build:win": "npm run clean && vue-tsc -b && vite build && electron-builder --win --x64 -p never",
+    "clean": "rm -rf release dist dist-electron src-tauri/target",
+    "build": "npm run clean && vue-tsc -b && vite build",
+    "tauri": "tauri",
     "preview": "vite preview"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
-    "7zip-bin": "^5.2.0",
     "element-plus": "^2.14.2",
     "oracledb": "^7.0.0",
     "vue": "^3.5.34",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/cli": "^2.11.2",
     "@types/node": "^24.12.3",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
     "cors": "^2.8.6",
-    "electron": "^41.7.1",
-    "electron-builder": "^26.15.3",
     "express": "^5.2.1",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",
-    "vite-plugin-electron": "^1.0.4",
     "vue-tsc": "^3.2.8"
-  },
-  "build": {
-    "appId": "com.croodslee.batchpersonchange",
-    "productName": "批量调岗智能辅助工具",
-    "publish": [
-      {
-        "provider": "generic",
-        "url": "http://localhost"
-      }
-    ],
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
-    ],
-    "mac": {
-      "target": [
-        "dmg"
-      ],
-      "category": "public.app-category.utilities"
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
   }
 }
