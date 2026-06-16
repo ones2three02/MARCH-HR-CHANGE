@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --font-premium: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-premium: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
   --theme-transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --transition-spring: all 0.5s var(--ease-spring);
@@ -471,44 +471,95 @@ body {
 /* ---------------------------------------------------- */
 
 /* 下沉式 inputs 框 */
-.el-input__wrapper, .el-textarea__inner, .el-select__wrapper {
+.el-input__wrapper, .el-select__wrapper {
   background-color: var(--input-bg) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 12px !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.04) !important;
+  padding: 0 12px !important;
+  height: 36px !important;
+  box-sizing: border-box !important;
   transition: var(--transition-spring) !important;
   color: var(--text-primary) !important;
 }
+
+.el-textarea__inner {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.04) !important;
+  padding: 8px 12px !important;
+  transition: var(--transition-spring) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-premium) !important;
+  font-size: 13.5px !important;
+}
+
 .el-input__wrapper.is-focus, .el-textarea__inner:focus, .el-select__wrapper.is-focus {
   border-color: var(--accent-color) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(0, 0, 0, 0.03),
-    0 0 0 4px var(--accent-glow) !important;
+    inset 0 1px 1.5px rgba(0, 0, 0, 0.03),
+    0 0 0 3px var(--accent-glow) !important;
   background-color: var(--input-bg) !important;
+}
+
+.el-input__inner {
+  font-family: var(--font-premium) !important;
+  font-size: 13.5px !important;
+  color: var(--text-primary) !important;
+  height: 100% !important;
+}
+.el-input__inner::placeholder {
+  color: var(--text-placeholder) !important;
+}
+.el-select__placeholder {
+  font-family: var(--font-premium) !important;
+  font-size: 13.5px !important;
+  color: var(--text-primary) !important;
 }
 
 /* 按钮微动效与水晶微渐变按键 */
 .el-button {
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   font-family: var(--font-premium) !important;
   font-weight: 600 !important;
-  padding: 10px 22px !important;
-  height: auto !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   background: var(--btn-info-bg);
   border: 1px solid var(--btn-info-border);
   color: var(--btn-info-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Element Plus 各种尺寸适配 */
+.el-button--default {
+  padding: 8px 16px !important;
+  height: 36px !important;
+  font-size: 13px !important;
+}
+.el-button--small {
+  padding: 5px 12px !important;
+  height: 28px !important;
+  font-size: 11.5px !important;
+  border-radius: 6px !important;
+}
+.el-button--large {
+  padding: 12px 24px !important;
+  height: 44px !important;
+  font-size: 14.5px !important;
+  border-radius: 10px !important;
 }
 
 .el-button:hover {
   background: var(--border-color-light);
   border-color: var(--border-color);
-  transform: translateY(-1.5px);
+  transform: translateY(-1px);
 }
 
 .el-button:active {
-  transform: translateY(1px) scale(0.97);
+  transform: translateY(0.5px) scale(0.98);
 }
 
 /* 靛蓝水晶渐变主按钮 */
@@ -913,3 +964,317 @@ body {
   color: var(--text-regular);
   line-height: 1.5;
 }
+
+/* ==================================================== */
+/* 3. 企业级深度进化专属组件样式 (Enterprise Premium UI) */
+/* ==================================================== */
+
+/* 数据库配置多环境管理 (Profile Selector) */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--border-color-light);
+}
+.profile-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-select-compact {
+  width: 180px;
+}
+
+/* 调岗级联数据 Diff 对照看板 (Visual Diff Board) */
+.diff-board-card {
+  margin-top: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-bezel-shell);
+  padding: 20px;
+  transition: var(--transition-spring);
+}
+[data-theme="light"] .diff-board-card {
+  background: rgba(241, 245, 249, 0.4);
+}
+.diff-table-container {
+  max-height: 350px;
+  overflow-y: auto;
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-bezel-core);
+}
+.diff-row-header {
+  display: grid;
+  grid-template-columns: 80px 100px 200px 200px 2fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--table-header-bg);
+  border-bottom: 1px solid var(--border-color-light);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.diff-row {
+  display: grid;
+  grid-template-columns: 80px 100px 200px 200px 2fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color-extra-light);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: var(--transition-spring);
+}
+.diff-row:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+.diff-cell-old {
+  color: var(--danger-color);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.diff-cell-new {
+  color: var(--success-color);
+  background: var(--success-glow);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+.diff-arrow-icon {
+  color: var(--text-secondary);
+  margin: 0 4px;
+  font-weight: 900;
+  animation: pulseArrow 2s infinite;
+}
+@keyframes pulseArrow {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+
+/* 异步批处理黑客风控制台 (Terminal Console) */
+.terminal-console-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.terminal-console-box {
+  width: 760px;
+  background: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+[data-theme="light"] .terminal-console-box {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.terminal-header {
+  background: #18181c;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #22c55e; }
+.terminal-title {
+  color: #a1a1aa;
+  font-size: 12px;
+  font-family: monospace;
+  font-weight: 600;
+}
+.terminal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.terminal-log-output {
+  height: 260px;
+  overflow-y: auto;
+  background: #020205;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #38bdf8;
+  scroll-behavior: smooth;
+  text-align: left;
+}
+.log-row {
+  word-break: break-all;
+}
+.log-time {
+  color: #52525b;
+  margin-right: 6px;
+}
+.log-info {
+  color: #34d399;
+}
+.log-error {
+  color: #f87171;
+  font-weight: 700;
+}
+.log-warn {
+  color: #fbbf24;
+}
+.terminal-progress-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 14px;
+}
+.progress-percent {
+  font-size: 20px;
+  font-weight: 800;
+  color: #10b981;
+  font-family: monospace;
+}
+.terminal-status-text {
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
+/* 操作审计日志 (Audit Logs) */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-bezel-shell);
+}
+[data-theme="light"] .filter-bar {
+  background: rgba(241, 245, 249, 0.4);
+}
+.audit-status-tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.audit-status-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.audit-status-failed {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+/* ==================================================== */
+/* 4. 企业级高级表单与排版精细调整 */
+/* ==================================================== */
+.el-form-item {
+  margin-bottom: 22px !important;
+}
+
+.el-form-item__label {
+  font-family: var(--font-premium) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-regular) !important;
+  padding-bottom: 6px !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+}
+
+.el-radio__label {
+  font-family: var(--font-premium) !important;
+  font-size: 13.5px !important;
+  color: var(--text-regular) !important;
+}
+
+.el-radio.is-checked .el-radio__label {
+  color: var(--accent-color) !important;
+  font-weight: 600 !important;
+}
+
+.el-radio__inner {
+  border-color: var(--border-color) !important;
+  background-color: var(--input-bg) !important;
+}
+
+.el-radio.is-checked .el-radio__inner {
+  border-color: var(--accent-color) !important;
+  background-color: var(--accent-color) !important;
+}
+
+.el-switch__label {
+  font-family: var(--font-premium) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* 按钮发光特效精修 */
+.btn-primary-glow {
+  background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%) !important;
+  border: 1px solid #3730a3 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2) !important;
+}
+
+.btn-primary-glow:hover {
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%) !important;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35) !important;
+}
+
+.btn-success-glow {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid #047857 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-success-glow:hover {
+  background: linear-gradient(180deg, #34d399 0%, #059669 100%) !important;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 侧边栏及头部微调 */
+.sidebar-logo-text {
+  font-size: 14.5px !important;
+  font-weight: 750 !important;
+}
+
+.nav-item {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+

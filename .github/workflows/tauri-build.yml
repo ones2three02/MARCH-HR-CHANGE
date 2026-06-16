@@ -1,0 +1,46 @@
+name: Build & Release Desktop App
+
+on:
+  push:
+    # 每次推送类似 v1.0.0 的版本标签时自动触发编译并发布 Release
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    # 支持在 GitHub 网页上手动点击按钮一键运行编译
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write # 必须开放写入权限，用于在 GitHub 仓库中创建并上传发布文件包
+    strategy:
+      fail-fast: false
+      matrix:
+        # 同时并行编译 Windows 与 macOS 两个平台的独立可执行程序
+        platform: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Frontend Dependencies
+        run: npm install
+
+      - name: Build & Publish Tauri Desktop Client
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name || 'v1.0.0-draft' }}
+          releaseName: '批量调岗智能辅助工具 ${{ github.ref_name || 'v1.0.0-draft' }}'
+          releaseBody: '批量调岗智能辅助工具企业级桌面端双端正式包。包含 macOS DMG 与 Windows MSI 安装程序。'
+          releaseDraft: true
+          prerelease: false

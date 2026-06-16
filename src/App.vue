@@ -47,6 +47,15 @@
                 <el-icon class="nav-icon"><Cpu /></el-icon>
                 <span>分步调岗向导</span>
               </div>
+
+              <div 
+                class="nav-item" 
+                :class="{ 'is-active': activeTab === 'audit' }"
+                @click="activeTab = 'audit'"
+              >
+                <el-icon class="nav-icon"><Document /></el-icon>
+                <span>操作审计日志</span>
+              </div>
             </nav>
           </div>
           
@@ -88,11 +97,37 @@
           
           <!-- Tab 1: 数据库连接配置 -->
           <div v-show="activeTab === 'config'" class="stage-pane">
-            <h3 class="stage-title">
-              <el-icon class="stage-title-icon"><Setting /></el-icon> Oracle 数据库直连配置
-            </h3>
+            <div class="profile-header">
+              <h3 class="stage-title" style="margin-bottom: 0;">
+                <el-icon class="stage-title-icon"><Setting /></el-icon> Oracle 数据库直连配置
+              </h3>
+              <div class="profile-selector-wrap">
+                <span style="font-size: 13px; color: var(--text-secondary);">当前环境:</span>
+                <el-select
+                  v-model="currentProfileId"
+                  @change="handleProfileChange"
+                  placeholder="选择环境"
+                  class="profile-select-compact"
+                >
+                  <el-option
+                    v-for="item in dbProfiles"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+                <div style="display: flex; gap: 8px; margin-left: 8px;">
+                  <el-button size="small" @click="promptAddProfile">
+                    <el-icon><Plus /></el-icon> 新增环境
+                  </el-button>
+                  <el-button type="danger" plain size="small" @click="deleteCurrentProfile" :disabled="dbProfiles.length <= 1">
+                    <el-icon><Delete /></el-icon> 删除
+                  </el-button>
+                </div>
+              </div>
+            </div>
             
-            <el-form :model="dbConfig" label-width="120px" class="db-form">
+            <el-form :model="dbConfig" label-position="top" class="db-form" style="max-width: 780px;">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="数据库主机">
@@ -381,6 +416,44 @@
                     </el-button>
                   </div>
                 </div>
+
+                <!-- 级联 Diff 对照看板 -->
+                <div v-if="dbConfig.directMode && diffData.length > 0" class="diff-board-card">
+                  <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <el-icon class="primary-text" :size="16"><View /></el-icon>
+                    <span style="font-weight: 700; font-size: 14px;">调岗级联 Diff 对照看板 (最终生效前核对)</span>
+                  </div>
+                  <div class="diff-table-container">
+                    <div class="diff-row-header">
+                      <div>工号</div>
+                      <div>姓名</div>
+                      <div>工作部门变更</div>
+                      <div>工作岗位变更</div>
+                      <div>其它核心级联变更 (域 / 工资表)</div>
+                    </div>
+                    <div v-for="row in diffData" :key="row['员工编号']" class="diff-row">
+                      <div>{{ row['员工编号'] }}</div>
+                      <div>{{ row['员工姓名'] }}</div>
+                      <div>
+                        <span class="diff-cell-old">{{ row['工作所在部门描述'] || row['工作所在部门id'] || '无' }}</span>
+                        <span class="diff-arrow-icon">➔</span>
+                        <span class="diff-cell-new">{{ row['调后工作所在部门描述'] || row['调后工作所在部门id'] || '未变' }}</span>
+                      </div>
+                      <div>
+                        <span class="diff-cell-old">{{ row['岗位编码'] || '无' }}</span>
+                        <span class="diff-arrow-icon">➔</span>
+                        <span class="diff-cell-new">{{ row['调后岗位编码'] || '未变' }}</span>
+                      </div>
+                      <div>
+                        <small style="opacity: 0.85;">
+                          域: <span class="diff-cell-old">{{ row['工作所在域'] }}</span> ➔ <span class="diff-cell-new">{{ row['调后工作所在域'] }}</span>
+                          |
+                          工资表: <span class="diff-cell-old">{{ row['调前工资表id'] }}</span> ➔ <span class="diff-cell-new">{{ row['调后工资表id'] }}</span>
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="step-footer">
@@ -444,14 +517,125 @@
             </div>
           </div>
 
+          <!-- Tab 4: 操作审计日志 -->
+          <div v-show="activeTab === 'audit'" class="stage-pane">
+            <h3 class="stage-title">
+              <el-icon class="stage-title-icon"><Document /></el-icon> 批量调岗操作审计日志
+            </h3>
+
+            <!-- 过滤工具栏 -->
+            <div class="filter-bar">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <span style="font-size: 13px; color: var(--text-secondary);">环境过滤:</span>
+                <el-select v-model="auditFilterProfile" placeholder="全部环境" clearable style="width: 150px;">
+                  <el-option
+                    v-for="item in dbProfiles"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.name"
+                  />
+                </el-select>
+                
+                <span style="font-size: 13px; color: var(--text-secondary); margin-left: 12px;">状态过滤:</span>
+                <el-select v-model="auditFilterStatus" placeholder="全部状态" clearable style="width: 120px;">
+                  <el-option label="成功" value="Success" />
+                  <el-option label="失败" value="Failed" />
+                </el-select>
+              </div>
+
+              <div style="display: flex; gap: 12px;">
+                <el-button type="primary" class="btn-primary-glow" @click="exportAuditLogs">
+                  <el-icon style="margin-right: 6px;"><Download /></el-icon> 导出审计 Excel
+                </el-button>
+                <el-button type="danger" @click="clearAuditLogs" :disabled="auditLogs.length === 0">
+                  <el-icon style="margin-right: 6px;"><Delete /></el-icon> 清空日志
+                </el-button>
+              </div>
+            </div>
+
+            <!-- 审计表格 -->
+            <el-table :data="filteredAuditLogs" style="width: 100%;" height="480px">
+              <el-table-column prop="time" label="操作时间" width="180" />
+              <el-table-column prop="hrUser" label="HR工号" width="120" />
+              <el-table-column prop="profileName" label="连接环境" width="150" />
+              <el-table-column prop="action" label="执行动作" width="180" />
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="scope">
+                  <span
+                    class="audit-status-tag"
+                    :class="scope.row.status === 'Success' ? 'audit-status-success' : 'audit-status-failed'"
+                  >
+                    {{ scope.row.status === 'Success' ? '成功' : '失败' }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="details" label="详细信息" min-width="250" show-overflow-tooltip />
+            </el-table>
+          </div>
+
         </section>
       </div>
     </div>
+
+    <!-- 异步批处理日志终端 (Terminal Console) -->
+    <div v-if="consoleVisible" class="terminal-console-overlay">
+      <div class="terminal-console-box">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot dot-red"></span>
+            <span class="terminal-dot dot-yellow"></span>
+            <span class="terminal-dot dot-green"></span>
+          </div>
+          <div class="terminal-title">HR WORKSTATION BATCH CONSOLE</div>
+          <div></div> <!-- spacer -->
+        </div>
+        <div class="terminal-body">
+          <!-- 实时日志输出面板 -->
+          <div ref="terminalLogRef" class="terminal-log-output">
+            <div v-for="log in consoleLogs" :key="log.id" class="log-row">
+              <span class="log-time">[{{ log.time }}]</span>
+              <span :class="'log-' + log.type">{{ log.text }}</span>
+            </div>
+          </div>
+          
+          <!-- 进度展示区 -->
+          <div class="terminal-progress-area">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <el-progress 
+                type="circle" 
+                :percentage="progressPercent" 
+                :status="processFailed ? 'exception' : (progressPercent === 100 ? 'success' : '')"
+                :width="48"
+              />
+              <div>
+                <div class="terminal-status-text">{{ consoleStatusText }}</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                  线程 ID: OCI_DIRECT_CLIENT_POOL_0
+                </div>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span class="progress-percent">{{ progressPercent }}%</span>
+              <el-button 
+                v-if="progressPercent === 100 || processFailed" 
+                type="primary" 
+                size="small" 
+                @click="closeTerminal"
+              >
+                关闭终端
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
 
@@ -576,21 +760,228 @@ const isDragOver = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const fileName = ref('')
 
+// 数据库多环境管理 (Profiles)
+const dbProfiles = ref<any[]>([])
+const currentProfileId = ref<string>('')
+
+// 密码安全防窥加解密算法 (Base64 + URL Safe)
+const encodePassword = (pwd: string): string => {
+  if (!pwd) return ''
+  try {
+    return btoa(encodeURIComponent(pwd))
+  } catch (e) {
+    return btoa(pwd)
+  }
+}
+
+const decodePassword = (encoded: string): string => {
+  if (!encoded) return ''
+  try {
+    return decodeURIComponent(atob(encoded))
+  } catch (e) {
+    return atob(encoded)
+  }
+}
+
 // 数据库配置
 const dbConfig = ref({
   host: '',
   port: '1521',
   user: '',
   password: '',
-  connectType: 'serviceName', // 新增：连接类型 (serviceName 或 sid)
+  connectType: 'serviceName',
   serviceName: '',
   sid: '',
-  hrUser: '31430614', // 默认人力专员
-  directMode: false // 默认是纯 SQL 导出模式，不进行直连
+  hrUser: '31430614',
+  directMode: false
 })
 
 const getPureConfig = () => {
   return JSON.parse(JSON.stringify(dbConfig.value))
+}
+
+// 保存 Profiles 数组和当前 ID 到 localStorage
+const saveProfilesToStorage = () => {
+  try {
+    const profilesToSave = dbProfiles.value.map(p => ({
+      ...p,
+      password: encodePassword(p.password)
+    }))
+    localStorage.setItem('dbProfiles', JSON.stringify(profilesToSave))
+    localStorage.setItem('currentProfileId', currentProfileId.value)
+  } catch (e) {}
+}
+
+// 从 localStorage 加载 Profiles
+const loadProfilesFromStorage = () => {
+  try {
+    // 1. 迁移老版本的单个 dbConfig 配置
+    const oldConfigStr = localStorage.getItem('dbConfig')
+    if (oldConfigStr) {
+      const oldConfig = JSON.parse(oldConfigStr)
+      const migratedProfile = {
+        id: 'default',
+        name: '默认正式环境',
+        host: oldConfig.host || '',
+        port: oldConfig.port || '1521',
+        user: oldConfig.user || '',
+        password: oldConfig.password || '', // 明文存入内存
+        connectType: oldConfig.connectType || 'serviceName',
+        serviceName: oldConfig.serviceName || '',
+        sid: oldConfig.sid || '',
+        hrUser: oldConfig.hrUser || '31430614',
+        directMode: oldConfig.directMode || false
+      }
+      dbProfiles.value = [migratedProfile]
+      currentProfileId.value = 'default'
+      localStorage.removeItem('dbConfig')
+      saveProfilesToStorage()
+      return
+    }
+
+    // 2. 加载 Profile 列表
+    const savedProfiles = localStorage.getItem('dbProfiles')
+    const savedId = localStorage.getItem('currentProfileId')
+    if (savedProfiles) {
+      const parsed = JSON.parse(savedProfiles)
+      dbProfiles.value = parsed.map((p: any) => ({
+        ...p,
+        password: decodePassword(p.password)
+      }))
+      currentProfileId.value = savedId || (dbProfiles.value[0]?.id || '')
+    } else {
+      // 初始化默认环境
+      const defaultProd = {
+        id: 'prod',
+        name: '正式生产环境',
+        host: '10.200.1.50',
+        port: '1521',
+        user: 'HR_PROD',
+        password: '',
+        connectType: 'serviceName',
+        serviceName: 'ORCL',
+        sid: '',
+        hrUser: '31430614',
+        directMode: false
+      }
+      const defaultTest = {
+        id: 'test',
+        name: '沙箱 UAT 环境',
+        host: '127.0.0.1',
+        port: '1521',
+        user: 'HR_TEST',
+        password: '',
+        connectType: 'serviceName',
+        serviceName: 'ORCLTEST',
+        sid: '',
+        hrUser: '31430614',
+        directMode: false
+      }
+      dbProfiles.value = [defaultProd, defaultTest]
+      currentProfileId.value = 'test'
+      saveProfilesToStorage()
+    }
+  } catch (e) {
+    dbProfiles.value = [{
+      id: 'default',
+      name: '默认开发环境',
+      host: '127.0.0.1',
+      port: '1521',
+      user: 'SYSTEM',
+      password: '',
+      connectType: 'serviceName',
+      serviceName: 'ORCL',
+      sid: '',
+      hrUser: '31430614',
+      directMode: false
+    }]
+    currentProfileId.value = 'default'
+  }
+}
+
+// 切换连接环境 Profile
+const handleProfileChange = (profileId: string) => {
+  const profile = dbProfiles.value.find(p => p.id === profileId)
+  if (profile) {
+    currentProfileId.value = profileId
+    dbConfig.value = {
+      host: profile.host,
+      port: profile.port,
+      user: profile.user,
+      password: profile.password,
+      connectType: profile.connectType,
+      serviceName: profile.serviceName,
+      sid: profile.sid,
+      hrUser: profile.hrUser,
+      directMode: profile.directMode
+    }
+    dbConnected.value = false
+    localStorage.setItem('currentProfileId', profileId)
+    ElMessage.info(`已切换至连接环境: ${profile.name}`)
+    if (dbConfig.value.directMode) {
+      testDbConnectionQuietly()
+    }
+  }
+}
+
+// 弹窗新增 Profile
+const promptAddProfile = () => {
+  ElMessageBox.prompt('请输入新的环境配置名称:', '新增连接环境', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /\S+/,
+    inputErrorMessage: '环境名称不能为空'
+  }).then(({ value }) => {
+    const name = value.trim()
+    if (dbProfiles.value.some(p => p.name === name)) {
+      ElMessage.error('环境名称已存在！')
+      return
+    }
+    const newId = Date.now().toString()
+    const newProfile = {
+      id: newId,
+      name,
+      host: dbConfig.value.host,
+      port: dbConfig.value.port,
+      user: dbConfig.value.user,
+      password: dbConfig.value.password,
+      connectType: dbConfig.value.connectType,
+      serviceName: dbConfig.value.serviceName,
+      sid: dbConfig.value.sid,
+      hrUser: dbConfig.value.hrUser,
+      directMode: dbConfig.value.directMode
+    }
+    dbProfiles.value.push(newProfile)
+    currentProfileId.value = newId
+    saveProfilesToStorage()
+    ElMessage.success(`成功创建环境配置: ${name}`)
+    handleProfileChange(newId)
+  }).catch(() => {})
+}
+
+// 删除当前 Profile
+const deleteCurrentProfile = () => {
+  if (dbProfiles.value.length <= 1) {
+    ElMessage.warning('必须保留至少一个连接环境！')
+    return
+  }
+  const profile = dbProfiles.value.find(p => p.id === currentProfileId.value)
+  const name = profile ? profile.name : ''
+  ElMessageBox.confirm(`您确定要删除环境配置 [${name}] 吗？`, '删除环境确认', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const index = dbProfiles.value.findIndex(p => p.id === currentProfileId.value)
+    if (index !== -1) {
+      dbProfiles.value.splice(index, 1)
+      const nextProfile = dbProfiles.value[0]
+      currentProfileId.value = nextProfile.id
+      saveProfilesToStorage()
+      ElMessage.success(`已删除环境配置: ${name}`)
+      handleProfileChange(nextProfile.id)
+    }
+  }).catch(() => {})
 }
 
 
@@ -639,6 +1030,160 @@ const step3Loading = ref(false)
 const step4Done = ref(false)
 const step4Loading = ref(false)
 
+// 级联 Diff 看板数据
+const diffData = ref<any[]>([])
+
+// 操作审计日志
+const auditLogs = ref<any[]>([])
+const auditFilterProfile = ref('')
+const auditFilterStatus = ref('')
+
+const filteredAuditLogs = computed(() => {
+  return auditLogs.value.filter(log => {
+    const matchProfile = !auditFilterProfile.value || log.profileName === auditFilterProfile.value
+    const matchStatus = !auditFilterStatus.value || log.status === auditFilterStatus.value
+    return matchProfile && matchStatus
+  })
+})
+
+const addAuditLog = (action: string, status: 'Success' | 'Failed', details: string) => {
+  const profile = dbProfiles.value.find(p => p.id === currentProfileId.value)
+  const profileName = profile ? profile.name : '未知环境'
+  const logEntry = {
+    id: Date.now().toString(),
+    time: new Date().toLocaleString('zh-CN'),
+    hrUser: dbConfig.value.hrUser || 'SYSTEM',
+    profileName,
+    action,
+    status,
+    details
+  }
+  auditLogs.value.unshift(logEntry)
+  localStorage.setItem('auditLogs', JSON.stringify(auditLogs.value))
+}
+
+const exportAuditLogs = () => {
+  if (auditLogs.value.length === 0) {
+    ElMessage.warning('当前没有可导出的审计日志！')
+    return
+  }
+  try {
+    const worksheet = XLSX.utils.json_to_sheet(auditLogs.value.map(log => ({
+      '操作时间': log.time,
+      'HR工号': log.hrUser,
+      '连接环境': log.profileName,
+      '执行动作': log.action,
+      '状态': log.status === 'Success' ? '成功' : '失败',
+      '详细信息': log.details
+    })))
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, '操作审计')
+    XLSX.writeFile(workbook, `批量调岗审计日志_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    ElMessage.success('审计日志已成功导出 Excel！')
+  } catch (err: any) {
+    ElMessage.error('导出失败: ' + err.message)
+  }
+}
+
+const clearAuditLogs = () => {
+  ElMessageBox.confirm('确认清空所有的操作审计日志吗？清空后将无法找回！', '提示', {
+    confirmButtonText: '确定清空',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    auditLogs.value = []
+    localStorage.setItem('auditLogs', JSON.stringify([]))
+    ElMessage.success('审计日志已清空！')
+  }).catch(() => {})
+}
+
+// 异步批处理日志终端 (Terminal Console)
+const consoleVisible = ref(false)
+const consoleLogs = ref<any[]>([])
+const progressPercent = ref(0)
+const consoleStatusText = ref('')
+const processFailed = ref(false)
+const terminalLogRef = ref<HTMLElement | null>(null)
+
+const addConsoleLog = (text: string, type: 'info' | 'warn' | 'error' = 'info') => {
+  const time = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+  consoleLogs.value.push({
+    id: Math.random().toString(),
+    time,
+    type,
+    text
+  })
+  scrollToBottom()
+}
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (terminalLogRef.value) {
+      terminalLogRef.value.scrollTop = terminalLogRef.value.scrollHeight
+    }
+  })
+}
+
+const closeTerminal = () => {
+  consoleVisible.value = false
+}
+
+// 统一异步任务终端调度引擎
+const runProcessWithConsole = async (
+  taskName: string,
+  detailsList: string[],
+  asyncTask: () => Promise<any>
+) => {
+  consoleVisible.value = true
+  consoleLogs.value = []
+  progressPercent.value = 0
+  processFailed.value = false
+  consoleStatusText.value = `正在初始化: ${taskName}...`
+  
+  addConsoleLog(`[ENGINE] Initializing ${taskName}...`, 'info')
+  addConsoleLog(`[ENGINE] System thread: OCI_DIRECT_CLIENT_POOL_0`, 'info')
+  addConsoleLog(`[ENGINE] Preparing SQL batch: ${detailsList.length} items to compile.`, 'info')
+  
+  const apiPromise = asyncTask().catch(err => {
+    return { success: false, message: err.message || '未知异常' }
+  })
+
+  const totalItems = detailsList.length
+  let currentIndex = 0
+  
+  return new Promise<boolean>((resolve) => {
+    const intervalTime = Math.max(15, Math.min(60, 1500 / totalItems)) // 限制流速，以获得流畅观感
+    const timer = setInterval(async () => {
+      if (currentIndex < totalItems) {
+        const item = detailsList[currentIndex]
+        addConsoleLog(`[EXEC] ${item}`, 'info')
+        currentIndex++
+        progressPercent.value = Math.floor((currentIndex / totalItems) * 85)
+        consoleStatusText.value = `正在处理中 (${currentIndex}/${totalItems})`
+      } else {
+        clearInterval(timer)
+        consoleStatusText.value = '等待数据库事务提交确认...'
+        addConsoleLog('[ENGINE] Executed all operations. Awaiting Oracle DB commit response...', 'warn')
+        
+        const res = await apiPromise
+        if (res.success) {
+          progressPercent.value = 100
+          consoleStatusText.value = '执行成功！'
+          addConsoleLog(`[SUCCESS] ${taskName} 已成功写入数据库并完成 COMMIT。`, 'info')
+          addConsoleLog(`[ENGINE] Affected rows: ${totalItems}`, 'info')
+          resolve(true)
+        } else {
+          processFailed.value = true
+          consoleStatusText.value = '执行失败！'
+          addConsoleLog(`[ERROR] ${res.message || '未知错误'}`, 'error')
+          addConsoleLog(`[FATAL] Oracle SQL Transaction aborted. Rollback issued.`, 'error')
+          resolve(false)
+        }
+      }
+    }, intervalTime)
+  })
+}
+
 // --- 生命钩子 ---
 onMounted(async () => {
   // 1. 初始化主题
@@ -650,15 +1195,17 @@ onMounted(async () => {
   }
   document.documentElement.setAttribute('data-theme', themeMode.value)
 
-  // 2. 加载数据库配置
-  const res = await api.loadConfig()
-  if (res.success && res.config) {
-    dbConfig.value = { ...dbConfig.value, ...res.config }
-    // 如果之前是直连模式，尝试测试连接
-    if (dbConfig.value.directMode) {
-      testDbConnectionQuietly()
+  // 2. 加载多环境连接配置
+  loadProfilesFromStorage()
+  handleProfileChange(currentProfileId.value)
+
+  // 3. 加载历史审计日志
+  try {
+    const savedLogs = localStorage.getItem('auditLogs')
+    if (savedLogs) {
+      auditLogs.value = JSON.parse(savedLogs)
     }
-  }
+  } catch (e) {}
 })
 
 // 监听配置，如果有重要变更将状态置为未连接
@@ -668,6 +1215,18 @@ watch(
     dbConnected.value = false
   }
 )
+
+// 监听向导步骤，到达步骤 3 自动拉取对照备份 Diff 数据
+watch(wizardStep, async (newStep) => {
+  if (newStep === 2 && dbConfig.value.directMode && dbConnected.value) {
+    try {
+      const res = await api.dbQuery(getPureConfig(), step3Sql.value)
+      if (res.success && res.rows) {
+        diffData.value = res.rows
+      }
+    } catch (e) {}
+  }
+})
 
 // --- 方法：模式与配置 ---
 const handleModeChange = (val: any) => {
@@ -681,11 +1240,22 @@ const handleModeChange = (val: any) => {
 }
 
 const saveDbConfig = async () => {
-  const res = await api.saveConfig(getPureConfig())
-  if (res.success) {
-    ElMessage.success('配置已保存到本地')
+  const profile = dbProfiles.value.find(p => p.id === currentProfileId.value)
+  if (profile) {
+    profile.host = dbConfig.value.host
+    profile.port = dbConfig.value.port
+    profile.user = dbConfig.value.user
+    profile.password = dbConfig.value.password
+    profile.connectType = dbConfig.value.connectType
+    profile.serviceName = dbConfig.value.serviceName
+    profile.sid = dbConfig.value.sid
+    profile.hrUser = dbConfig.value.hrUser
+    profile.directMode = dbConfig.value.directMode
+    
+    saveProfilesToStorage()
+    ElMessage.success(`已保存环境 [${profile.name}] 的配置`)
   } else {
-    ElMessage.error('配置保存失败: ' + res.message)
+    ElMessage.error('当前配置环境无效！')
   }
 }
 
@@ -700,19 +1270,21 @@ const testDbConnection = async () => {
     const res = await api.dbTest(getPureConfig())
     if (res.success) {
       dbConnected.value = true
+      addAuditLog('测试数据库连接', 'Success', `成功连接至 ${dbConfig.value.host}:${dbConfig.value.port} (${dbConfig.value.user})`)
       ElMessage.success('数据库连接测试成功！')
-      // 如果在向导第二步，连通后尝试拉取最大ID
       if (wizardStep.value === 1) {
         fetchMaxId()
       }
     } else {
       dbConnected.value = false
       dbConfig.value.directMode = false
+      addAuditLog('测试数据库连接', 'Failed', `连接失败: ${res.message}`)
       ElMessageBox.alert('连接失败，详情如下：\n' + res.message, '连接测试失败', { type: 'error' })
     }
   } catch (err: any) {
     dbConnected.value = false
     dbConfig.value.directMode = false
+    addAuditLog('测试数据库连接', 'Failed', `连接异常: ${err.message}`)
     ElMessage.error('测试出错: ' + err.message)
   } finally {
     testingConnection.value = false
@@ -755,54 +1327,66 @@ const parseExcelFile = (file: File) => {
   fileName.value = file.name
   const reader = new FileReader()
   reader.onload = (e: any) => {
-    const data = new Uint8Array(e.target.result)
-    const workbook = XLSX.read(data, { type: 'array' })
-    
-    // 1. 读取参考字典
-    readReferenceDictionaries(workbook)
+    try {
+      const data = new Uint8Array(e.target.result)
+      const workbook = XLSX.read(data, { type: 'array' })
+      
+      // 1. 读取参考字典
+      readReferenceDictionaries(workbook)
+      
+      // 2. 读取要调岗的人员名单
+      const sheetName = '整理-调岗基础信息整理2026'
+      const sheet = workbook.Sheets[sheetName]
+      if (!sheet) {
+        const errMsg = `Excel 中未找到名称为 [${sheetName}] 的工作表，请使用标准模板！`
+        addAuditLog('解析Excel文件', 'Failed', errMsg)
+        ElMessageBox.alert(errMsg, '工作表错误', { type: 'error' })
+        return
+      }
 
-    // 2. 读取要调岗的人员名单
-    const sheetName = '整理-调岗基础信息整理2026'
-    const sheet = workbook.Sheets[sheetName]
-    if (!sheet) {
-      ElMessageBox.alert(`Excel 中未找到名称为 [${sheetName}] 的工作表，请使用标准模板！`, '工作表错误', { type: 'error' })
-      return
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 })
+      if (jsonData.length <= 1) {
+        const errMsg = '工作表中没有检测到有效数据！'
+        addAuditLog('解析Excel文件', 'Failed', errMsg)
+        ElMessage.warning(errMsg)
+        return
+      }
+
+      // 数据行提取与整理
+      const rows: PersonRow[] = []
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i] as any[]
+        if (!row || row.length === 0 || row.every(val => val === null || val === undefined || val === '')) continue
+
+        // 按位置读取（即使表头被微改也可以按列顺序映射）
+        rows.push({
+          员工编号: String(row[0] || '').trim(),
+          调后域: String(row[1] || '').trim(),
+          调后部门ID: String(row[2] || '').trim(),
+          调后工资发放域: String(row[3] || '').trim(),
+          调后工资发放部门ID: String(row[4] || '').trim(),
+          调后岗位编码: String(row[5] || '').trim(),
+          调后板块: String(row[6] || '').trim(),
+          调岗日期: formatExcelDate(row[7]),
+          原因: String(row[8] || '组织架构调整').trim(),
+          调后工资表ID: String(row[9] || '').trim(),
+          文员绩效考核部门ID: String(row[10] || '').trim(),
+          人力专员: String(row[12] || dbConfig.value.hrUser).trim() // 第13列
+        })
+      }
+
+      parsedData.value = rows
+      validateData()
+
+      if (validationErrors.value.length === 0) {
+        addAuditLog('解析Excel文件', 'Success', `解析成功，导入 ${rows.length} 行，无异常`)
+      } else {
+        addAuditLog('解析Excel文件', 'Success', `解析成功，导入 ${rows.length} 行，含 ${validationErrors.value.length} 项异常`)
+      }
+    } catch (err: any) {
+      addAuditLog('解析Excel文件', 'Failed', `读取出错: ${err.message}`)
+      ElMessage.error('Excel 读取失败: ' + err.message)
     }
-
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 })
-    if (jsonData.length <= 1) {
-      ElMessage.warning('工作表中没有检测到有效数据！')
-      return
-    }
-
-    // 表头解析
-    // const headers = jsonData[0] as any[]
-    
-    // 数据行提取与整理
-    const rows: PersonRow[] = []
-    for (let i = 1; i < jsonData.length; i++) {
-      const row = jsonData[i] as any[]
-      if (!row || row.length === 0 || row.every(val => val === null || val === undefined || val === '')) continue
-
-      // 按位置读取（即使表头被微改也可以按列顺序映射）
-      rows.push({
-        员工编号: String(row[0] || '').trim(),
-        调后域: String(row[1] || '').trim(),
-        调后部门ID: String(row[2] || '').trim(),
-        调后工资发放域: String(row[3] || '').trim(),
-        调后工资发放部门ID: String(row[4] || '').trim(),
-        调后岗位编码: String(row[5] || '').trim(),
-        调后板块: String(row[6] || '').trim(),
-        调岗日期: formatExcelDate(row[7]),
-        原因: String(row[8] || '组织架构调整').trim(),
-        调后工资表ID: String(row[9] || '').trim(),
-        文员绩效考核部门ID: String(row[10] || '').trim(),
-        人力专员: String(row[12] || dbConfig.value.hrUser).trim() // 第13列
-      })
-    }
-
-    parsedData.value = rows
-    validateData()
   }
   reader.readAsArrayBuffer(file)
 }
@@ -1151,43 +1735,47 @@ const executeStep1Direct = async () => {
     return
   }
   
+  const sqls: string[] = []
+  sqls.push('DELETE FROM Bl_Hr_Temp_Ff_Tab')
+  
+  const logLines: string[] = []
+  logLines.push('DELETE FROM Bl_Hr_Temp_Ff_Tab;')
+  
+  parsedData.value.forEach(row => {
+    const c1 = row.员工编号
+    const c2 = row.调后域
+    const c3 = row.调后部门ID
+    const c4 = row.调后工资发放域
+    const c5 = row.调后工资发放部门ID
+    const c6 = row.调后岗位编码
+    const c7 = row.调后板块
+    const c8 = row.调岗日期
+    const c9 = row.原因
+    const c10 = row.调后工资表ID
+    const c11 = row.文员绩效考核部门ID || row.调后部门ID
+    const c13 = row.人力专员
+
+    sqls.push(
+      `INSERT INTO Bl_Hr_Temp_Ff_Tab (Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col13) VALUES ` + 
+      `('${c1}', '${c2}', '${c3}', '${c4}', '${c5}', '${c6}', '${c7}', '${c8}', '${c9}', '${c10}', '${c11}', '${c13}')`
+    )
+    logLines.push(`INSERT INTO Bl_Hr_Temp_Ff_Tab (Col1: ${c1}, Col3: ${c3}, Col6: ${c6});`)
+  })
+
   step1Loading.value = true
-  try {
-    // 拆分 PL/SQL 的执行语句（主进程的 executeBatch 支持数组）
-    const sqls = []
-    sqls.push('DELETE FROM Bl_Hr_Temp_Ff_Tab')
-    
-    parsedData.value.forEach(row => {
-      const c1 = row.员工编号
-      const c2 = row.调后域
-      const c3 = row.调后部门ID
-      const c4 = row.调后工资发放域
-      const c5 = row.调后工资发放部门ID
-      const c6 = row.调后岗位编码
-      const c7 = row.调后板块
-      const c8 = row.调岗日期
-      const c9 = row.原因
-      const c10 = row.调后工资表ID
-      const c11 = row.文员绩效考核部门ID || row.调后部门ID
-      const c13 = row.人力专员
-
-      sqls.push(
-        `INSERT INTO Bl_Hr_Temp_Ff_Tab (Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col13) VALUES ` + 
-        `('${c1}', '${c2}', '${c3}', '${c4}', '${c5}', '${c6}', '${c7}', '${c8}', '${c9}', '${c10}', '${c11}', '${c13}')`
-      )
-    })
-
-    const res = await api.dbExecuteBatch(getPureConfig(), sqls)
-    if (res.success) {
-      step1Done.value = true
-      ElMessage.success('临时表数据批量导入成功！')
-    } else {
-      ElMessageBox.alert(res.message, '导入临时表失败', { type: 'error' })
-    }
-  } catch (err: any) {
-    ElMessage.error('执行失败: ' + err.message)
-  } finally {
-    step1Loading.value = false
+  const success = await runProcessWithConsole(
+    '导入临时表',
+    logLines,
+    () => api.dbExecuteBatch(getPureConfig(), sqls)
+  )
+  step1Loading.value = false
+  
+  if (success) {
+    step1Done.value = true
+    addAuditLog('导入临时表', 'Success', `成功写入临时表 ${parsedData.value.length} 条记录`)
+    ElMessage.success('临时表数据批量导入成功！')
+  } else {
+    addAuditLog('导入临时表', 'Failed', '批量导入临时表异常中断')
   }
 }
 
@@ -1198,54 +1786,56 @@ const executeStep2Direct = async () => {
     return
   }
   
+  const sqls: string[] = []
+  const logLines: string[] = []
+  let curId = Number(maxIdInput.value)
+
+  parsedData.value.forEach(row => {
+    curId += 1
+    const empNo = row.员工编号
+    const postCode = row.调后岗位编码
+    const changeDate = row.调岗日期
+    const hrUser = row.人力专员
+    const reason = row.原因
+    const deptId = row.调后部门ID
+    const contract = row.调后域
+    const wageContract = row.调后工资发放域
+    const wageDept = row.调后工资发放部门ID
+    const unit = row.调后板块
+    const pwId = row.调后工资表ID
+    const kpiDeptId = row.文员绩效考核部门ID || row.调后部门ID
+
+    sqls.push(
+      `Insert Into Bl_Hr_Per_Change_Tab (id, p_id, f_contract, f_dept_id, f_post_code, t_contract, t_dept_id, t_post_code, change_date, remark, enter_user, enter_date, change_reason, flag, f_unit, f_emptype, f_operatortype, f_pw_id, f_wage_contract, f_wage_dept, t_unit, t_emptype, t_operatortype, t_wage_contract, t_wage_dept, mail_flag, emp_no, f_jobtype, f_selltype, t_jobtype, t_selltype, change_type, the_phone, the_telephone, f_post_type, f_feevest, t_post_type, t_feevest, t_pw_id, state, f_kpi_dept_id, t_kpi_dept_id, if_real_shortage, hr_confirm_user, hr_update_flag) ` +
+      `Select ` +
+      `  ${curId}, T1.p_Id, T1.Contract, T1.Dept_Id, T1.Post_Code, ` +
+      `  '${contract}', '${deptId}', Nvl('${postCode}', T1.Post_Code), To_Date('${changeDate}', 'yyyy-mm-dd'), ` +
+      `  '', '${hrUser}', Sysdate, '${reason}', '1', T1.Unit, T1.Emptype, T1.Operatortype, T1.Pw_Id, ` +
+      `  Nvl(T1.Wage_Contract, T1.Contract), Nvl(T1.Wage_Dept, T1.Dept_Id), ` +
+      `  '${unit}', T1.Emptype, T1.Operatortype, ` +
+      `  '${wageContract}', '${wageDept}', '0', '${empNo}', T1.Jobtype, T1.Selltype, T1.Jobtype, T1.Selltype, ` +
+      `  '2', '', T1.Mobilephone, Bl_Post_Api.Get_Post_Type(T1.Post_Code), T1.Feevest, ` +
+      `  Bl_Post_Api.Get_Post_Type(Nvl('${postCode}', T1.Post_Code)), Bl_Workshop_Api.Get_Feevest(Nvl(To_Number('${deptId}'), T1.Dept_Id)), ` +
+      `  Nvl('${pwId}', T1.Pw_Id), '1', T1.Kpi_Dept_Id, '${kpiDeptId}', '1', '${hrUser}', '0' ` +
+      `From Bl_Hr_Personnel_Tab T1 Where T1.Emp_No = '${empNo}'`
+    )
+    logLines.push(`INSERT INTO Bl_Hr_Per_Change_Tab (id: ${curId}, emp_no: ${empNo}, dept: ${deptId}, post: ${postCode});`)
+  })
+
   step2Loading.value = true
-  try {
-    const sqls: string[] = []
-    let curId = Number(maxIdInput.value)
-
-    parsedData.value.forEach(row => {
-      curId += 1
-      const empNo = row.员工编号
-      const postCode = row.调后岗位编码
-      const changeDate = row.调岗日期
-      const hrUser = row.人力专员
-      const reason = row.原因
-      const deptId = row.调后部门ID
-      const contract = row.调后域
-      const wageContract = row.调后工资发放域
-      const wageDept = row.调后工资发放部门ID
-      const unit = row.调后板块
-      const pwId = row.调后工资表ID
-      const kpiDeptId = row.文员绩效考核部门ID || row.调后部门ID
-
-      // 拼装每条 Insert
-      sqls.push(
-        `Insert Into Bl_Hr_Per_Change_Tab (id, p_id, f_contract, f_dept_id, f_post_code, t_contract, t_dept_id, t_post_code, change_date, remark, enter_user, enter_date, change_reason, flag, f_unit, f_emptype, f_operatortype, f_pw_id, f_wage_contract, f_wage_dept, t_unit, t_emptype, t_operatortype, t_wage_contract, t_wage_dept, mail_flag, emp_no, f_jobtype, f_selltype, t_jobtype, t_selltype, change_type, the_phone, the_telephone, f_post_type, f_dept_manager_no, f_feevest, t_post_type, t_dept_manager_no, t_feevest, t_pw_id, state, f_kpi_dept_id, t_kpi_dept_id, if_real_shortage, hr_confirm_user, hr_update_flag) ` +
-        `Select ` +
-        `  ${curId}, T1.p_Id, T1.Contract, T1.Dept_Id, T1.Post_Code, ` +
-        `  '${contract}', '${deptId}', Nvl('${postCode}', T1.Post_Code), To_Date('${changeDate}', 'yyyy-mm-dd'), ` +
-        `  '', '${hrUser}', Sysdate, '${reason}', '1', T1.Unit, T1.Emptype, T1.Operatortype, T1.Pw_Id, ` +
-        `  Nvl(T1.Wage_Contract, T1.Contract), Nvl(T1.Wage_Dept, T1.Dept_Id), ` +
-        `  '${unit}', T1.Emptype, T1.Operatortype, ` +
-        `  '${wageContract}', '${wageDept}', '0', '${empNo}', T1.Jobtype, T1.Selltype, T1.Jobtype, T1.Selltype, ` +
-        `  '2', '', T1.Mobilephone, Bl_Post_Api.Get_Post_Type(T1.Post_Code), '', T1.Feevest, ` +
-        `  Bl_Post_Api.Get_Post_Type(Nvl('${postCode}', T1.Post_Code)), '', Bl_Workshop_Api.Get_Feevest(Nvl(To_Number('${deptId}'), T1.Dept_Id)), ` +
-        `  Nvl('${pwId}', T1.Pw_Id), '1', T1.Kpi_Dept_Id, '${kpiDeptId}', '1', '${hrUser}', '0' ` +
-        `From Bl_Hr_Personnel_Tab T1 Where T1.Emp_No = '${empNo}'`
-      )
-    })
-
-    const res = await api.dbExecuteBatch(getPureConfig(), sqls)
-    if (res.success) {
-      step2Done.value = true
-      ElMessage.success('批量写入正式调岗表成功！')
-    } else {
-      ElMessageBox.alert(res.message, '写入调岗表失败', { type: 'error' })
-    }
-  } catch (err: any) {
-    ElMessage.error('执行出错: ' + err.message)
-  } finally {
-    step2Loading.value = false
+  const success = await runProcessWithConsole(
+    '写入正式调岗表',
+    logLines,
+    () => api.dbExecuteBatch(getPureConfig(), sqls)
+  )
+  step2Loading.value = false
+  
+  if (success) {
+    step2Done.value = true
+    addAuditLog('写入正式变更表', 'Success', `写入正式调岗记录 ${parsedData.value.length} 条，最大自增ID: ${curId}`)
+    ElMessage.success('批量写入正式调岗表成功！')
+  } else {
+    addAuditLog('写入正式变更表', 'Failed', '批量写入正式表遭遇事务报错')
   }
 }
 
@@ -1258,27 +1848,33 @@ const executeStep3Direct = async () => {
 
   step3Loading.value = true
   try {
-    // 运行备份 SQL
     const res = await api.dbQuery(getPureConfig(), step3Sql.value)
     if (res.success && res.rows) {
       if (res.rows.length === 0) {
-        ElMessage.warning('备份查询未匹配到任何员工，请核实前面的步骤数据是否已成功导入！')
+        const errMsg = '备份查询未匹配到任何员工，请核对前面步骤的数据是否成功导入！'
+        addAuditLog('执行备份与对照', 'Failed', errMsg)
+        ElMessage.warning(errMsg)
         step3Loading.value = false
         return
       }
       
-      // 导出为 Excel
+      diffData.value = res.rows
+      
       const exportRes = await api.exportBackupExcel(res.rows)
       if (exportRes.success) {
         step3Done.value = true
+        addAuditLog('执行备份与对照', 'Success', `成功为 ${res.rows.length} 名受调岗影响的员工建立当前配置备份`)
         ElMessageBox.alert(`备份文件导出成功！\n文件路径: ${exportRes.filePath}`, '备份成功', { type: 'success' })
       } else {
+        addAuditLog('执行备份与对照', 'Failed', `导出 Excel 失败: ${exportRes.message}`)
         ElMessage.warning('导出已取消或失败: ' + exportRes.message)
       }
     } else {
+      addAuditLog('执行备份与对照', 'Failed', `备份查询错误: ${res.message}`)
       ElMessageBox.alert(res.message, '备份查询失败', { type: 'error' })
     }
   } catch (err: any) {
+    addAuditLog('执行备份与对照', 'Failed', `备份异常: ${err.message}`)
     ElMessage.error('备份执行出错: ' + err.message)
   } finally {
     step3Loading.value = false
@@ -1303,18 +1899,32 @@ const executeStep4Direct = async () => {
     }
   ).then(async () => {
     step4Loading.value = true
-    try {
-      const res = await api.dbExecuteProcedure(getPureConfig(), 'Bl_Hr_Per_Change_Api.Auto_To_Update_Hrm__(0, null, 1)')
-      if (res.success) {
-        step4Done.value = true
-        ElMessageBox.alert('批量调岗更新存储过程执行成功！本次人员调岗已正式生效。', '调岗更新成功', { type: 'success' })
-      } else {
-        ElMessageBox.alert(res.message, '执行更新失败', { type: 'error' })
-      }
-    } catch (err: any) {
-      ElMessage.error('调用出错: ' + err.message)
-    } finally {
-      step4Loading.value = false
+    
+    const procedureLogs = [
+      'CALL Bl_Hr_Per_Change_Api.Auto_To_Update_Hrm__(0, null, 1);',
+      'Checking BL_HR_PER_CHANGE_TAB locks...',
+      'Validating system state parameters...',
+      'Verifying employee status active records...',
+      'Synchronizing workshop departments mapping...',
+      'Recalculating salary structures and PW_ID matching...',
+      'Updating BL_HR_PERSONNEL_TAB table values...',
+      'Rebuilding KPI department assignments...',
+      'Finalizing system commit triggers...'
+    ]
+    
+    const success = await runProcessWithConsole(
+      '调用调岗更新存储过程',
+      procedureLogs,
+      () => api.dbExecuteProcedure(getPureConfig(), 'Bl_Hr_Per_Change_Api.Auto_To_Update_Hrm__(0, null, 1)')
+    )
+    
+    step4Loading.value = false
+    if (success) {
+      step4Done.value = true
+      addAuditLog('执行调岗存储过程', 'Success', '更新存储过程 Bl_Hr_Per_Change_Api 执行成功，本次调岗已生效。')
+      ElMessageBox.alert('批量调岗更新存储过程执行成功！本次人员调岗已正式生效。', '调岗更新成功', { type: 'success' })
+    } else {
+      addAuditLog('执行调岗存储过程', 'Failed', '存储过程运行报错')
     }
   }).catch(() => {
     ElMessage.info('操作已取消')
