@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "批量调岗智能辅助工具",
+  "productName": "batch-person-change",
   "version": "1.0.0",
   "identifier": "com.croodslee.batchpersonchange",
   "build": {
