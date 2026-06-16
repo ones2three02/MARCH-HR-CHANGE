@@ -39,8 +39,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name || 'v1.0.0-draft' }}
-          releaseName: '批量调岗智能辅助工具 ${{ github.ref_name || 'v1.0.0-draft' }}'
+          tagName: ${{ github.ref_name }}
+          releaseName: '批量调岗智能辅助工具 ${{ github.ref_name }}'
           releaseBody: '批量调岗智能辅助工具企业级桌面端双端正式包。包含 macOS DMG 与 Windows MSI 安装程序。'
           releaseDraft: true
           prerelease: false
