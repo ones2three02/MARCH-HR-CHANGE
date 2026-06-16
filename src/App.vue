@@ -455,9 +455,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
 
-// --- 自适应 API 层与本地化代理 ---
-const isElectron = typeof window !== 'undefined' && !!window.electronAPI
-
+// --- 轻量 Web API 代理层 ---
 const getApiUrl = (path: string) => {
   if (typeof window !== 'undefined') {
     const isDev = window.location.port === '5173' || window.location.port === '5174'
@@ -470,121 +468,93 @@ const getApiUrl = (path: string) => {
 
 const api = {
   async loadConfig() {
-    if (isElectron) {
-      return await window.electronAPI.loadConfig()
-    } else {
-      try {
-        const configStr = localStorage.getItem('dbConfig')
-        if (configStr) {
-          return { success: true, config: JSON.parse(configStr) }
-        }
-      } catch (e) {}
-      return { success: true, config: null }
-    }
+    try {
+      const configStr = localStorage.getItem('dbConfig')
+      if (configStr) {
+        return { success: true, config: JSON.parse(configStr) }
+      }
+    } catch (e) {}
+    return { success: true, config: null }
   },
 
   async saveConfig(config: any) {
-    if (isElectron) {
-      return await window.electronAPI.saveConfig(config)
-    } else {
-      try {
-        localStorage.setItem('dbConfig', JSON.stringify(config))
-        return { success: true }
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      localStorage.setItem('dbConfig', JSON.stringify(config))
+      return { success: true }
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   },
 
   async dbTest(config: any) {
-    if (isElectron) {
-      return await window.electronAPI.dbTest(config)
-    } else {
-      try {
-        const res = await fetch(getApiUrl('/api/db-test'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(config)
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.message || 'HTTP 错误')
-        return data
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      const res = await fetch(getApiUrl('/api/db-test'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'HTTP 错误')
+      return data
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   },
 
   async dbQuery(config: any, sql: string) {
-    if (isElectron) {
-      return await window.electronAPI.dbQuery(config, sql)
-    } else {
-      try {
-        const res = await fetch(getApiUrl('/api/db-query'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config, sql })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.message || 'HTTP 错误')
-        return data
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      const res = await fetch(getApiUrl('/api/db-query'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, sql })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'HTTP 错误')
+      return data
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   },
 
   async dbExecuteBatch(config: any, sqls: string[]) {
-    if (isElectron) {
-      return await window.electronAPI.dbExecuteBatch(config, sqls)
-    } else {
-      try {
-        const res = await fetch(getApiUrl('/api/db-execute-batch'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config, sqls })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.message || 'HTTP 错误')
-        return data
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      const res = await fetch(getApiUrl('/api/db-execute-batch'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, sqls })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'HTTP 错误')
+      return data
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   },
 
   async dbExecuteProcedure(config: any, procedureName: string) {
-    if (isElectron) {
-      return await window.electronAPI.dbExecuteProcedure(config, procedureName)
-    } else {
-      try {
-        const res = await fetch(getApiUrl('/api/db-execute-procedure'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config, procedureName })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.message || 'HTTP 错误')
-        return data
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      const res = await fetch(getApiUrl('/api/db-execute-procedure'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, procedureName })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'HTTP 错误')
+      return data
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   },
 
   async exportBackupExcel(rows: any[]): Promise<{ success: boolean; filePath?: string; message?: string }> {
-    if (isElectron) {
-      return await window.electronAPI.exportBackupExcel(rows)
-    } else {
-      try {
-        const worksheet = XLSX.utils.json_to_sheet(rows)
-        const workbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(workbook, worksheet, '对照备份')
-        XLSX.writeFile(workbook, '员工调岗前对照备份.xlsx')
-        return { success: true, filePath: '已由浏览器下载至本地' }
-      } catch (e: any) {
-        return { success: false, message: e.message }
-      }
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(rows)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, '对照备份')
+      XLSX.writeFile(workbook, '员工调岗前对照备份.xlsx')
+      return { success: true, filePath: '已由浏览器下载至本地' }
+    } catch (e: any) {
+      return { success: false, message: e.message }
     }
   }
 }
