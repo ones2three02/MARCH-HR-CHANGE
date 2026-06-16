@@ -1,0 +1,915 @@
+/* 全局 Principal UI 曜石双色美学设计 - Workbench 控制台专属 */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-premium: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --theme-transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring: all 0.5s var(--ease-spring);
+}
+
+/* ==================================================== */
+/* 1. 曜石深色极客配色 (Obsidian Dark Tech Theme) */
+/* ==================================================== */
+[data-theme="dark"] {
+  --bg-page: #09090b;
+  --bg-grid-color: rgba(255, 255, 255, 0.015);
+  --bg-bezel-shell: rgba(20, 20, 25, 0.45);
+  --bg-bezel-core: #121215;
+  --bg-sidebar: #16161a;
+  
+  --accent-color: #6366f1; /* 极光靛蓝 */
+  --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  
+  --success-color: #10b981; /* 薄荷绿 */
+  --success-hover: #059669;
+  --success-glow: rgba(16, 185, 129, 0.15);
+  
+  --danger-color: #f43f5e; /* 珊瑚红 */
+  --danger-hover: #e11d48;
+  --danger-glow: rgba(244, 63, 94, 0.15);
+  
+  --warning-color: #f59e0b;
+  
+  --outer-border: rgba(255, 255, 255, 0.06);
+  --inner-border: rgba(255, 255, 255, 0.05);
+  --shadow-soft: 0 15px 45px -12px rgba(0, 0, 0, 0.5), 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 25px 60px -15px rgba(99, 102, 241, 0.25), 0 8px 25px -6px rgba(99, 102, 241, 0.1);
+  
+  --text-primary: #f4f4f5;
+  --text-regular: #a1a1aa;
+  --text-secondary: #71717a;
+  --text-placeholder: #52525b;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-light: rgba(255, 255, 255, 0.04);
+  --border-color-extra-light: rgba(255, 255, 255, 0.02);
+  
+  --input-bg: #18181c;
+  --btn-info-bg: rgba(255, 255, 255, 0.05);
+  --btn-info-border: rgba(255, 255, 255, 0.1);
+  --btn-info-color: #e4e4e7;
+  
+  --table-header-bg: #1a1a20;
+  --table-row-hover: rgba(99, 102, 241, 0.06);
+  --table-row-text-hover: #ffffff;
+  
+  --upload-bg-gradient: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(20, 20, 25, 0.6) 100%);
+  --upload-bg-hover: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(30, 30, 35, 0.8) 100%);
+  --sql-bg: #0c0c0e;
+  
+  --tag-success-bg: rgba(16, 185, 129, 0.1);
+  --tag-success-border: rgba(16, 185, 129, 0.2);
+  --tag-success-color: #34d399;
+  
+  --tag-danger-bg: rgba(244, 63, 94, 0.1);
+  --tag-danger-border: rgba(244, 63, 94, 0.2);
+  --tag-danger-color: #fda4af;
+  
+  /* 覆盖 Element Plus 核心变量 */
+  --el-text-color-primary: var(--text-primary) !important;
+  --el-text-color-regular: var(--text-regular) !important;
+  --el-text-color-secondary: var(--text-secondary) !important;
+  --el-text-color-placeholder: var(--text-placeholder) !important;
+  --el-border-color: var(--border-color) !important;
+  --el-border-color-light: var(--border-color-light) !important;
+  --el-border-color-extra-light: var(--border-color-extra-light) !important;
+  --el-fill-color-blank: var(--bg-bezel-core) !important;
+  --el-bg-color: var(--bg-page) !important;
+  --el-bg-color-overlay: var(--bg-sidebar) !important;
+}
+
+/* ==================================================== */
+/* 2. 曜石极简 Alabaster 浅色配色 (Obsidian Light Theme) */
+/* ==================================================== */
+[data-theme="light"] {
+  --bg-page: #f8fafc;
+  --bg-grid-color: rgba(15, 23, 42, 0.015);
+  --bg-bezel-shell: rgba(241, 245, 249, 0.5);
+  --bg-bezel-core: #ffffff;
+  --bg-sidebar: #f4f4f5;
+  
+  --accent-color: #4f46e5; /* 靛蓝保证对比度 */
+  --accent-hover: #3730a3;
+  --accent-glow: rgba(79, 70, 229, 0.08);
+  
+  --success-color: #0d9488; /* 稍微偏深青 */
+  --success-hover: #0f766e;
+  --success-glow: rgba(13, 148, 136, 0.08);
+  
+  --danger-color: #e11d48;
+  --danger-hover: #be123c;
+  --danger-glow: rgba(225, 29, 72, 0.08);
+  
+  --warning-color: #d97706;
+  
+  --outer-border: rgba(15, 23, 42, 0.04);
+  --inner-border: rgba(15, 23, 42, 0.05);
+  --shadow-soft: 0 15px 45px -12px rgba(15, 23, 42, 0.08), 0 5px 15px -5px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 25px 60px -15px rgba(79, 70, 229, 0.12), 0 8px 25px -6px rgba(79, 70, 229, 0.06);
+  
+  --text-primary: #0f172a;
+  --text-regular: #475569;
+  --text-secondary: #94a3b8;
+  --text-placeholder: #cbd5e1;
+  
+  --border-color: rgba(15, 23, 42, 0.08);
+  --border-color-light: rgba(15, 23, 42, 0.04);
+  --border-color-extra-light: rgba(15, 23, 42, 0.02);
+  
+  --input-bg: #fdfdfd;
+  --btn-info-bg: rgba(15, 23, 42, 0.02);
+  --btn-info-border: rgba(15, 23, 42, 0.08);
+  --btn-info-color: #334155;
+  
+  --table-header-bg: #f8fafc;
+  --table-row-hover: rgba(79, 70, 229, 0.04);
+  --table-row-text-hover: #0f172a;
+  
+  --upload-bg-gradient: linear-gradient(135deg, rgba(79, 70, 229, 0.01) 0%, rgba(255, 255, 255, 0.8) 100%);
+  --upload-bg-hover: linear-gradient(135deg, rgba(79, 70, 229, 0.02) 0%, rgba(255, 255, 255, 1) 100%);
+  --sql-bg: #18181c; /* 在浅色下，代码框也建议使用优雅的深色来保护眼睛和代码可读性 */
+  
+  --tag-success-bg: rgba(13, 148, 136, 0.08);
+  --tag-success-border: rgba(13, 148, 136, 0.15);
+  --tag-success-color: #0d9488;
+  
+  --tag-danger-bg: rgba(225, 29, 72, 0.08);
+  --tag-danger-border: rgba(225, 29, 72, 0.15);
+  --tag-danger-color: #e11d48;
+  
+  /* 覆盖 Element Plus 核心变量 */
+  --el-text-color-primary: var(--text-primary) !important;
+  --el-text-color-regular: var(--text-regular) !important;
+  --el-text-color-secondary: var(--text-secondary) !important;
+  --el-text-color-placeholder: var(--text-placeholder) !important;
+  --el-border-color: var(--border-color) !important;
+  --el-border-color-light: var(--border-color-light) !important;
+  --el-border-color-extra-light: var(--border-color-extra-light) !important;
+  --el-fill-color-blank: #ffffff !important;
+  --el-bg-color: #ffffff !important;
+  --el-bg-color-overlay: #fdfdfd !important;
+}
+
+/* ==================================================== */
+/* 3. 页面底盘布局与网格 */
+/* ==================================================== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-premium);
+  background-color: var(--bg-page);
+  /* 精密双主题科技网格底图 */
+  background-image: 
+    linear-gradient(var(--bg-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  user-select: none;
+  transition: var(--theme-transition);
+}
+
+/* 顶部 macOS 拖拽区占位 */
+.titlebar-drag-region {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  -webkit-app-region: drag;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.titlebar-interactive {
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------- */
+/* DOUBLE-BEZEL 一体化大面板 (Workbench Platform) */
+/* ---------------------------------------------------- */
+
+/* 外底座 (Outer Shell) */
+.bezel-shell {
+  background: var(--bg-bezel-shell);
+  border: 1px solid var(--outer-border);
+  border-radius: 28px;
+  padding: 8px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.02), var(--shadow-soft);
+  transition: var(--theme-transition);
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  backdrop-filter: blur(20px);
+}
+
+/* 核心内胆 (Inner Workbench Core) */
+.bezel-core {
+  background: var(--bg-bezel-core);
+  border: 1px solid var(--inner-border);
+  border-radius: 20px; /* concentric curve */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: var(--theme-transition);
+  display: flex; /* 横向布局 */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.bezel-shell:hover {
+  background: rgba(99, 102, 241, 0.015);
+  border-color: rgba(99, 102, 241, 0.12);
+}
+
+.bezel-shell:hover .bezel-core {
+  border-color: rgba(99, 102, 241, 0.15);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ---------------------------------------------------- */
+/* 左侧边栏 (Workbench Sidebar) */
+/* ---------------------------------------------------- */
+.workbench-sidebar {
+  width: 250px;
+  border-right: 1px solid var(--border-color-light);
+  background: var(--bg-sidebar);
+  padding: 32px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 550px;
+  transition: var(--theme-transition);
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* 侧边栏 Logo 区域 */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 8px;
+}
+.sidebar-logo-icon {
+  color: var(--accent-color);
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+}
+.sidebar-logo-text {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  background: linear-gradient(135deg, #818cf8 0%, var(--accent-color) 50%, var(--success-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 竖向胶囊式导航 (Vertical Pill Tabs) */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition-spring);
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-theme="light"] .nav-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+/* 激活态：深浅色自适应悬浮水晶按钮 */
+.nav-item.is-active {
+  color: var(--text-primary);
+  background: var(--bg-bezel-core);
+  font-weight: 700;
+  border-color: var(--border-color);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.nav-item .nav-icon {
+  font-size: 16px;
+  transition: var(--transition-spring);
+}
+.nav-item.is-active .nav-icon {
+  color: var(--accent-color);
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-top: 1px solid var(--border-color-light);
+  padding-top: 24px;
+}
+
+/* 日/月 主题一键切换卡 */
+.theme-switch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.01);
+  color: var(--text-regular);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-spring);
+}
+.theme-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+[data-theme="light"] .theme-switch-btn:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.theme-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.theme-switch-btn:hover .theme-icon-container {
+  transform: rotate(30deg);
+}
+
+/* 直连/SQL 模式切换卡 */
+.sidebar-toggle-card {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-extra-light);
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+[data-theme="light"] .sidebar-toggle-card {
+  background: rgba(0, 0, 0, 0.02);
+}
+.toggle-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+/* 数据库连接状态 */
+.sidebar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 8px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #52525b;
+  box-shadow: 0 0 0 3px rgba(82, 82, 91, 0.15);
+  transition: all 0.3s;
+}
+[data-theme="light"] .status-dot {
+  background: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(203, 213, 225, 0.15);
+}
+
+.status-dot.is-active {
+  background: var(--success-color) !important;
+  box-shadow: 0 0 0 3px var(--success-glow) !important;
+}
+
+/* ---------------------------------------------------- */
+/* 右侧主舞台 (Workbench Stage) */
+/* ---------------------------------------------------- */
+.workbench-stage {
+  flex: 1;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: transparent;
+  transition: var(--theme-transition);
+}
+
+/* 阶段面板标题 */
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+.stage-title-icon {
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+/* ---------------------------------------------------- */
+/* 滚动条 */
+/* ---------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ---------------------------------------------------- */
+/* Element Plus 组件微雕刻 */
+/* ---------------------------------------------------- */
+
+/* 下沉式 inputs 框 */
+.el-input__wrapper, .el-textarea__inner, .el-select__wrapper {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  padding: 10px 16px !important;
+  transition: var(--transition-spring) !important;
+  color: var(--text-primary) !important;
+}
+.el-input__wrapper.is-focus, .el-textarea__inner:focus, .el-select__wrapper.is-focus {
+  border-color: var(--accent-color) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(0, 0, 0, 0.03),
+    0 0 0 4px var(--accent-glow) !important;
+  background-color: var(--input-bg) !important;
+}
+
+/* 按钮微动效与水晶微渐变按键 */
+.el-button {
+  border-radius: 12px !important;
+  font-family: var(--font-premium) !important;
+  font-weight: 600 !important;
+  padding: 10px 22px !important;
+  height: auto !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: var(--btn-info-bg);
+  border: 1px solid var(--btn-info-border);
+  color: var(--btn-info-color);
+}
+
+.el-button:hover {
+  background: var(--border-color-light);
+  border-color: var(--border-color);
+  transform: translateY(-1.5px);
+}
+
+.el-button:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+/* 靛蓝水晶渐变主按钮 */
+.el-button--primary {
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%) !important;
+  border: 1px solid #4338ca !important;
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.el-button--primary:hover {
+  background: linear-gradient(180deg, #818cf8 0%, #4f46e5 100%) !important;
+  box-shadow: 
+    0 6px 18px rgba(99, 102, 241, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-color: #4f46e5 !important;
+}
+
+/* 翡翠水晶渐变成功按钮 */
+.el-button--success {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid #047857 !important;
+  box-shadow: 
+    0 4px 12px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.el-button--success:hover {
+  background: linear-gradient(180deg, #34d399 0%, #047857 100%) !important;
+  box-shadow: 
+    0 6px 18px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-color: #059669 !important;
+}
+
+/* 珊瑚红水晶渐变危险按钮 */
+.el-button--danger {
+  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%) !important;
+  border: 1px solid #be123c !important;
+  box-shadow: 
+    0 4px 12px rgba(244, 63, 94, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.el-button--danger:hover {
+  background: linear-gradient(180deg, #fb7185 0%, #be123c 100%) !important;
+  box-shadow: 
+    0 6px 18px rgba(244, 63, 94, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-color: #e11d48 !important;
+}
+
+/* 浅灰/次级普通按钮 */
+.el-button--info {
+  background: var(--btn-info-bg) !important;
+  border: 1px solid var(--btn-info-border) !important;
+  color: var(--btn-info-color) !important;
+}
+.el-button--info:hover {
+  background: var(--border-color-light) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 描述列表 (Descriptions) */
+.el-descriptions__title {
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.el-descriptions__body {
+  background: transparent !important;
+}
+.el-descriptions__table {
+  border: 1px solid var(--border-color-light) !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.el-descriptions-item__label {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-regular) !important;
+  font-weight: 600 !important;
+  border-color: var(--border-color-light) !important;
+}
+[data-theme="light"] .el-descriptions-item__label {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+.el-descriptions-item__content {
+  color: var(--text-primary) !important;
+  border-color: var(--border-color-light) !important;
+}
+
+/* 标签 (Tags) */
+.el-tag {
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+}
+.el-tag--success {
+  background-color: var(--tag-success-bg) !important;
+  border-color: var(--tag-success-border) !important;
+  color: var(--tag-success-color) !important;
+}
+.el-tag--danger {
+  background-color: var(--tag-danger-bg) !important;
+  border-color: var(--tag-danger-border) !important;
+  color: var(--tag-danger-color) !important;
+}
+
+/* 数据表格 (Table Refinement) */
+.el-table {
+  --el-table-bg-color: transparent !important;
+  --el-table-tr-bg-color: transparent !important;
+  --el-table-header-bg-color: var(--table-header-bg) !important;
+  --el-table-border-color: var(--border-color-light) !important;
+  font-family: var(--font-premium) !important;
+  color: var(--text-regular) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color-light);
+}
+.el-table th.el-table__cell {
+  background-color: var(--table-header-bg) !important;
+  color: var(--text-regular) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 12px 0 !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+.el-table td.el-table__cell {
+  padding: 10px 0 !important;
+  border-bottom: 1px solid var(--border-color-light) !important;
+}
+.el-table__row:hover > td {
+  background-color: var(--table-row-hover) !important;
+  color: var(--table-row-text-hover) !important;
+}
+
+/* 步骤条 (Elegant Steps) */
+.el-step__title {
+  font-family: var(--font-premium) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+}
+.el-step__description {
+  color: var(--text-placeholder) !important;
+  font-size: 11px !important;
+}
+.el-step__icon {
+  background: var(--bg-bezel-core) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 700 !important;
+  transition: var(--transition-spring);
+}
+.el-step__title.is-process {
+  color: var(--text-primary) !important;
+}
+.el-step__head.is-process {
+  .el-step__icon {
+    border-color: var(--accent-color) !important;
+    color: var(--accent-color) !important;
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+}
+.el-step__title.is-success {
+  color: var(--success-color) !important;
+}
+.el-step__head.is-success {
+  color: var(--success-color) !important;
+  border-color: var(--success-color) !important;
+  .el-step__icon {
+    border-color: var(--success-color) !important;
+    color: var(--success-color) !important;
+    background: var(--success-glow) !important;
+  }
+  .el-step__line {
+    background-color: var(--success-color) !important;
+  }
+}
+
+/* ---------------------------------------------------- */
+/* 独创特色组件设计 */
+/* ---------------------------------------------------- */
+
+/* 水晶拖拽岛屿 (The Crystal Drop Zone) */
+.upload-drag-area {
+  border: 2px dashed rgba(99, 102, 241, 0.18);
+  border-radius: 16px;
+  padding: 50px 20px;
+  text-align: center;
+  background: var(--upload-bg-gradient);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.upload-drag-area:hover, .upload-drag-area.drag-over {
+  border-color: var(--accent-color);
+  background: var(--upload-bg-hover);
+  box-shadow: 
+    inset 0 2px 8px rgba(99, 102, 241, 0.02),
+    0 12px 30px -10px var(--accent-glow);
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: var(--text-placeholder);
+  margin-bottom: 16px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.upload-drag-area:hover .upload-icon {
+  transform: translateY(-4px);
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.upload-text .primary-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.upload-text .primary-text span {
+  color: var(--accent-color);
+  font-weight: 600;
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+
+.upload-text .sub-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.analysis-results {
+  margin-top: 24px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.error-text {
+  color: var(--danger-color) !important;
+}
+
+.error-table {
+  border-radius: 8px;
+  border: 1px solid var(--tag-danger-border) !important;
+  background: var(--tag-danger-bg) !important;
+}
+
+.action-bar {
+  margin-top: 24px;
+  text-align: right;
+}
+
+/* 向导步骤样式 */
+.custom-steps {
+  margin-bottom: 28px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 12px;
+}
+
+.step-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.description-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-regular);
+}
+
+.info-alert {
+  background: var(--accent-glow);
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+
+.info-alert p {
+  margin: 0;
+  color: var(--text-regular);
+}
+
+.info-alert strong {
+  color: var(--text-primary);
+}
+
+/* SQL 代码块的高亮设计 */
+.sql-code-box {
+  position: relative;
+  background: var(--sql-bg);
+  border: 1px solid var(--border-color-light);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 10px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.sql-code-box pre {
+  margin: 0;
+  overflow: auto;
+  max-height: 350px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #38bdf8; /* 默认使用天空蓝 */
+}
+
+/* 针对导出的 SQL 进行词法着色，使其极具审美感 */
+.sql-code-box pre code {
+  color: #38bdf8;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.step-footer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.id-calc-box {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--border-color-light) !important;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+[data-theme="light"] .id-calc-box {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+.help-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.danger-warning {
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  background: rgba(244, 63, 94, 0.02);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.warning-icon {
+  color: var(--danger-color);
+  filter: drop-shadow(0 0 6px var(--danger-glow));
+}
+
+.warning-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--danger-color);
+  font-weight: 700;
+}
+
+.warning-desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-regular);
+  line-height: 1.5;
+}
