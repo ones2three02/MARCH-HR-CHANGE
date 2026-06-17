@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node server.js",
+    "server": "node server-backend/server.js",
     "clean": "rm -rf release dist dist-electron src-tauri/target",
-    "build": "npm run clean && vue-tsc -b && vite build",
+    "build": "npm run clean && npm install --prefix server-backend && vue-tsc -b && vite build",
     "tauri": "tauri",
     "preview": "vite preview"
   },

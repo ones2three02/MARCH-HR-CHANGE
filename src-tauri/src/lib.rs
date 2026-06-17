@@ -15,20 +15,26 @@ pub fn run() {
       }
 
       // 动态检测 server.js 的定位 (Release 打包状态下由于相对路径 ../ 会被归入 _up_ 目录)
-      let server_path = app.path().resolve("_up_/server.js", BaseDirectory::Resource)
+      let server_path = app.path().resolve("_up_/server-backend/server.js", BaseDirectory::Resource)
         .ok()
         .filter(|p| p.exists())
         .or_else(|| {
-          app.path().resolve("server.js", BaseDirectory::Resource)
+          app.path().resolve("server-backend/server.js", BaseDirectory::Resource)
             .ok()
             .filter(|p| p.exists())
         });
 
       if let Some(server_path) = server_path {
+        let server_dir = server_path.parent().unwrap();
         let mut path_str = server_path.to_string_lossy().to_string();
-        // 移除 Windows UNC 路径前缀 \\?\，避免 cmd 路径解析异常导致模块找不到
+        // 移除 Windows UNC 路径前缀 \\?\，避免路径解析异常
         if path_str.starts_with(r"\\?\") {
           path_str = path_str.replace(r"\\?\", "");
+        }
+        
+        let mut server_dir_str = server_dir.to_string_lossy().to_string();
+        if server_dir_str.starts_with(r"\\?\") {
+          server_dir_str = server_dir_str.replace(r"\\?\", "");
         }
         
         #[cfg(target_os = "windows")]
@@ -37,10 +43,11 @@ pub fn run() {
           use std::os::windows::process::CommandExt;
           const CREATE_NO_WINDOW: u32 = 0x08000000;
           
-          // 尝试在系统临时目录下写入启动日志以供故障排查 (避免 C:\Program Files 的写入权限不足问题)
+          // 尝试在系统临时目录下写入启动日志以供故障排查
           let log_path = std::env::temp_dir().join("node_server.log");
           let mut cmd = Command::new("node");
-          cmd.creation_flags(CREATE_NO_WINDOW)
+          cmd.current_dir(&server_dir_str)
+             .creation_flags(CREATE_NO_WINDOW)
              .arg(&path_str);
           
           if let Ok(log_file) = std::fs::File::create(log_path) {
@@ -54,6 +61,7 @@ pub fn run() {
         #[cfg(not(target_os = "windows"))]
         {
           let _ = Command::new("node")
+              .current_dir(&server_dir_str)
               .arg(&path_str)
               .spawn();
         }

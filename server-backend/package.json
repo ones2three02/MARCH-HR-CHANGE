@@ -1,0 +1,12 @@
+{
+  "name": "batch-person-change-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^5.2.1",
+    "cors": "^2.8.6",
+    "oracledb": "^7.0.0",
+    "xlsx": "^0.18.5"
+  }
+}

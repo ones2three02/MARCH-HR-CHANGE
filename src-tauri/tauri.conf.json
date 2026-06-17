@@ -34,12 +34,7 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "../package.json",
-      "../server.js",
-      "../node_modules/express/**/*",
-      "../node_modules/cors/**/*",
-      "../node_modules/oracledb/**/*",
-      "../node_modules/xlsx/**/*"
+      "../server-backend/**/*"
     ],
     "macOS": {
       "entitlements": null
