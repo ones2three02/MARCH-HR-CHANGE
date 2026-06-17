@@ -14,28 +14,44 @@ pub fn run() {
         )?;
       }
 
-      // 自动在后台启动 Node.js 代理服务 (直接通过 Tauri 资源路径解析器定位 server.js 资源)
-      if let Ok(server_path) = app.path().resolve("server.js", BaseDirectory::Resource) {
-        if server_path.exists() {
-          let path_str = server_path.to_string_lossy().to_string();
-          
-          #[cfg(target_os = "windows")]
-          {
-            // 使用 CREATE_NO_WINDOW 避免在 Windows 上弹出控制台黑窗口
-            use std::os::windows::process::CommandExt;
-            const CREATE_NO_WINDOW: u32 = 0x08000000;
-            let _ = Command::new("cmd")
-                .creation_flags(CREATE_NO_WINDOW)
-                .args(&["/C", &format!("node \"{}\"", path_str)])
-                .spawn();
-          }
+      // 动态检测 server.js 的定位 (Release 打包状态下由于相对路径 ../ 会被归入 _up_ 目录)
+      let server_path = app.path().resolve("_up_/server.js", BaseDirectory::Resource)
+        .ok()
+        .filter(|p| p.exists())
+        .or_else(|| {
+          app.path().resolve("server.js", BaseDirectory::Resource)
+            .ok()
+            .filter(|p| p.exists())
+        });
 
-          #[cfg(not(target_os = "windows"))]
-          {
-            let _ = Command::new("node")
-                .arg(&path_str)
-                .spawn();
+      if let Some(server_path) = server_path {
+        let path_str = server_path.to_string_lossy().to_string();
+        
+        #[cfg(target_os = "windows")]
+        {
+          // 使用 CREATE_NO_WINDOW 避免在 Windows 上弹出控制台黑窗口
+          use std::os::windows::process::CommandExt;
+          const CREATE_NO_WINDOW: u32 = 0x08000000;
+          
+          // 尝试在 server.js 所在目录写入启动日志以供故障排查
+          let log_path = server_path.parent().unwrap().join("node_server.log");
+          let mut cmd = Command::new("cmd");
+          cmd.creation_flags(CREATE_NO_WINDOW)
+             .args(&["/C", &format!("node \"{}\"", path_str)]);
+          
+          if let Ok(log_file) = std::fs::File::create(log_path) {
+            if let Ok(log_file_err) = log_file.try_clone() {
+              cmd.stdout(log_file).stderr(log_file_err);
+            }
           }
+          let _ = cmd.spawn();
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+          let _ = Command::new("node")
+              .arg(&path_str)
+              .spawn();
         }
       }
 

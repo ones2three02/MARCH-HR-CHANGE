@@ -682,7 +682,11 @@ const api = {
       if (!res.ok) throw new Error(data.message || 'HTTP 错误')
       return data
     } catch (e: any) {
-      return { success: false, message: e.message }
+      let msg = e.message || String(e)
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+      }
+      return { success: false, message: msg }
     }
   },
 
@@ -697,7 +701,11 @@ const api = {
       if (!res.ok) throw new Error(data.message || 'HTTP 错误')
       return data
     } catch (e: any) {
-      return { success: false, message: e.message }
+      let msg = e.message || String(e)
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+      }
+      return { success: false, message: msg }
     }
   },
 
@@ -712,7 +720,11 @@ const api = {
       if (!res.ok) throw new Error(data.message || 'HTTP 错误')
       return data
     } catch (e: any) {
-      return { success: false, message: e.message }
+      let msg = e.message || String(e)
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+      }
+      return { success: false, message: msg }
     }
   },
 
@@ -727,7 +739,11 @@ const api = {
       if (!res.ok) throw new Error(data.message || 'HTTP 错误')
       return data
     } catch (e: any) {
-      return { success: false, message: e.message }
+      let msg = e.message || String(e)
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+      }
+      return { success: false, message: msg }
     }
   },
 
