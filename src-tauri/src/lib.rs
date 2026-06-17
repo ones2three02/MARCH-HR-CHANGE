@@ -25,7 +25,11 @@ pub fn run() {
         });
 
       if let Some(server_path) = server_path {
-        let path_str = server_path.to_string_lossy().to_string();
+        let mut path_str = server_path.to_string_lossy().to_string();
+        // 移除 Windows UNC 路径前缀 \\?\，避免 cmd 路径解析异常导致模块找不到
+        if path_str.starts_with(r"\\?\") {
+          path_str = path_str.replace(r"\\?\", "");
+        }
         
         #[cfg(target_os = "windows")]
         {
