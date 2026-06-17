@@ -638,6 +638,7 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
+import { invoke } from '@tauri-apps/api/core'
 
 // --- 轻量 Web API 代理层 ---
 const getApiUrl = (path: string) => {
@@ -649,6 +650,44 @@ const getApiUrl = (path: string) => {
     }
   }
   return path
+}
+
+const showBackendError = async () => {
+  try {
+    const logContent = await invoke<string>('get_node_log')
+    ElMessageBox.alert(
+      `<div style="text-align: left; font-family: monospace;">
+        <p style="color: #ef4444; font-weight: bold; margin-bottom: 8px; font-size: 14px;">🔴 连接本地后台代理服务失败 (Failed to fetch)</p>
+        <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">以下是本地 Node.js 进程最近生成的运行日志。请将此日志提供给开发人员协助排查，或者根据内容修复：</p>
+        <pre style="background: #1e1e2e; color: #cdd6f4; padding: 12px; border-radius: 6px; font-size: 12px; line-height: 1.5; overflow-y: auto; max-height: 300px; margin: 0; white-space: pre-wrap; word-break: break-all;">${logContent}</pre>
+      </div>`,
+      '后台服务运行日志',
+      {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '确定',
+        customClass: 'custom-error-box'
+      }
+    )
+  } catch (err: any) {
+    ElMessageBox.alert(
+      `<div style="text-align: left;">
+        <p style="color: #ef4444; font-weight: bold; margin-bottom: 8px; font-size: 14px;">🔴 本地 Node.js 后台服务未成功启动</p>
+        <p style="font-size: 13px; color: #4b5563; margin-bottom: 8px;"><b>排查指南：</b></p>
+        <ol style="padding-left: 20px; margin: 0 0 12px; font-size: 13px; line-height: 1.6; color: #4b5563;">
+          <li><b>请确保系统已安装 Node.js 环境</b>。由于本应用是基于 Tauri 极轻量架构构建的，Oracle 数据库连接依赖本地 Node 运行环境。</li>
+          <li><b>请验证 node 命令是否已加入环境变量 PATH 中</b>。您可以在命令行窗口 (cmd/PowerShell) 中运行 <code>node -v</code> 确认。</li>
+          <li>如果已安装且能打印版本，可能是由于安装目录被限制写入或防火墙端口 3000 被占用，请尝试以管理员身份重新运行程序。</li>
+        </ol>
+        <p style="font-size: 12px; color: #d97706; margin-top: 8px;"><b>系统错误详情：</b>${err.message || err}</p>
+      </div>`,
+      '本地环境缺失或启动受阻',
+      {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '确定',
+        customClass: 'custom-error-box'
+      }
+    )
+  }
 }
 
 const api = {
@@ -1296,7 +1335,11 @@ const testDbConnection = async () => {
       dbConnected.value = false
       dbConfig.value.directMode = false
       addAuditLog('测试数据库连接', 'Failed', `连接失败: ${res.message}`)
-      ElMessageBox.alert('连接失败，详情如下：\n' + res.message, '连接测试失败', { type: 'error' })
+      if (res.message.includes('Failed to fetch')) {
+        showBackendError()
+      } else {
+        ElMessageBox.alert('连接失败，详情如下：\n' + res.message, '连接测试失败', { type: 'error' })
+      }
     }
   } catch (err: any) {
     dbConnected.value = false

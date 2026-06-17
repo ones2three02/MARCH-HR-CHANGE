@@ -2,9 +2,20 @@ use tauri::Manager;
 use tauri::path::BaseDirectory;
 use std::process::Command;
 
+#[tauri::command]
+fn get_node_log() -> Result<String, String> {
+  let log_path = std::env::temp_dir().join("node_server.log");
+  if log_path.exists() {
+    std::fs::read_to_string(log_path).map_err(|e| e.to_string())
+  } else {
+    Err("未检测到日志文件。可能由于您系统上未全局安装 Node.js (或环境变量 PATH 中未配置 node)。".to_string())
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![get_node_log])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
