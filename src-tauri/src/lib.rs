@@ -39,9 +39,9 @@ pub fn run() {
           
           // 尝试在系统临时目录下写入启动日志以供故障排查 (避免 C:\Program Files 的写入权限不足问题)
           let log_path = std::env::temp_dir().join("node_server.log");
-          let mut cmd = Command::new("cmd");
+          let mut cmd = Command::new("node");
           cmd.creation_flags(CREATE_NO_WINDOW)
-             .args(&["/C", &format!("node \"{}\"", path_str)]);
+             .arg(&path_str);
           
           if let Ok(log_file) = std::fs::File::create(log_path) {
             if let Ok(log_file_err) = log_file.try_clone() {
