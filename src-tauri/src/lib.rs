@@ -33,8 +33,8 @@ pub fn run() {
           use std::os::windows::process::CommandExt;
           const CREATE_NO_WINDOW: u32 = 0x08000000;
           
-          // 尝试在 server.js 所在目录写入启动日志以供故障排查
-          let log_path = server_path.parent().unwrap().join("node_server.log");
+          // 尝试在系统临时目录下写入启动日志以供故障排查 (避免 C:\Program Files 的写入权限不足问题)
+          let log_path = std::env::temp_dir().join("node_server.log");
           let mut cmd = Command::new("cmd");
           cmd.creation_flags(CREATE_NO_WINDOW)
              .args(&["/C", &format!("node \"{}\"", path_str)]);

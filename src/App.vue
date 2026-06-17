@@ -684,7 +684,7 @@ const api = {
     } catch (e: any) {
       let msg = e.message || String(e)
       if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
-        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请在 Windows 地址栏输入 %TEMP% 并回车，查看 node_server.log 确认服务报错或 Oracle 驱动依赖。)`
       }
       return { success: false, message: msg }
     }
@@ -703,7 +703,7 @@ const api = {
     } catch (e: any) {
       let msg = e.message || String(e)
       if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
-        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请在 Windows 地址栏输入 %TEMP% 并回车，查看 node_server.log 确认服务报错或 Oracle 驱动依赖。)`
       }
       return { success: false, message: msg }
     }
@@ -722,7 +722,7 @@ const api = {
     } catch (e: any) {
       let msg = e.message || String(e)
       if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
-        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请在 Windows 地址栏输入 %TEMP% 并回车，查看 node_server.log 确认服务报错或 Oracle 驱动依赖。)`
       }
       return { success: false, message: msg }
     }
@@ -741,7 +741,7 @@ const api = {
     } catch (e: any) {
       let msg = e.message || String(e)
       if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
-        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请查看安装目录 resources/_up_/node_server.log 确认服务报错或 Oracle 驱动依赖。)`
+        msg = `${msg} (连接本地代理服务失败。请确保系统已全局安装 Node.js；若已安装，请在 Windows 地址栏输入 %TEMP% 并回车，查看 node_server.log 确认服务报错或 Oracle 驱动依赖。)`
       }
       return { success: false, message: msg }
     }
