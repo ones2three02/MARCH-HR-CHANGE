@@ -642,8 +642,9 @@ import * as XLSX from 'xlsx'
 // --- 轻量 Web API 代理层 ---
 const getApiUrl = (path: string) => {
   if (typeof window !== 'undefined') {
+    const isTauri = window.location.hostname === 'tauri.localhost' || window.location.protocol.startsWith('tauri')
     const isDev = window.location.port === '5173' || window.location.port === '5174'
-    if (isDev) {
+    if (isDev || isTauri) {
       return `http://localhost:3000${path}`
     }
   }
