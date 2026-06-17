@@ -25,7 +25,7 @@ if (fs.existsSync(distPath)) {
 }
 
 // 辅助函数：构造 Oracle 连接字符串（与 Electron 主进程逻辑对齐）
-function getConnectString(config: any) {
+function getConnectString(config) {
   if (config.connectType === 'sid' || (!config.connectType && config.sid)) {
     return `${config.host}:${config.port}:${config.sid}`
   }
@@ -45,7 +45,7 @@ app.post('/api/db-test', async (req, res) => {
       connectString: getConnectString(req.body),
     })
     res.json({ success: true })
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   } finally {
     if (conn) {
@@ -72,7 +72,7 @@ app.post('/api/db-execute-batch', async (req, res) => {
     }
     await conn.commit()
     res.json({ success: true })
-  } catch (err: any) {
+  } catch (err) {
     if (conn) {
       await conn.rollback().catch(() => {})
     }
@@ -96,7 +96,7 @@ app.post('/api/db-query', async (req, res) => {
     })
     const result = await conn.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT })
     res.json({ success: true, rows: result.rows, metaData: result.metaData })
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   } finally {
     if (conn) {
@@ -118,7 +118,7 @@ app.post('/api/db-execute-procedure', async (req, res) => {
     await conn.execute(`BEGIN ${procedureName}; END;`)
     await conn.commit()
     res.json({ success: true })
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   } finally {
     if (conn) {
