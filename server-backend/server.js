@@ -128,7 +128,7 @@ app.post('/api/db-execute-procedure', async (req, res) => {
 })
 
 // 统一的 SPA 降级路由（支持 HTML5 History 路由，如有）
-app.get('*', (req, res) => {
+app.get('(.*)', (req, res) => {
   const indexHtml = path.join(distPath, 'index.html')
   if (fs.existsSync(indexHtml)) {
     res.sendFile(indexHtml)
