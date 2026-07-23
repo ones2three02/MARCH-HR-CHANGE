@@ -774,7 +774,7 @@ import UpdateModal from './components/UpdateModal.vue'
 
 // --- 在线更新状态与方法 ---
 const updateModalVisible = ref(false)
-const appVersion = ref('1.0.16')
+const appVersion = ref('1.0.17')
 const hasNewUpdate = ref(false)
 
 const openUpdateModal = () => {
@@ -1359,24 +1359,36 @@ const resetWizard = () => {
   ElMessage.success('批量调岗流程顺利完成，已重置向导！')
 }
 
-// SQL 文本计算属性
+// SQL 文本计算属性 (基于原厂 Oracle 真实生产表结构 Bl_Hr_Per_Change_Tab & Bl_Hr_Personnel_Tab)
 const step1Sql = computed(() => {
   if (parsedData.value.length === 0) return '-- 暂无调岗数据'
-  let sql = '-- 步骤 1：清空并导入临时表\nDELETE FROM BL_HR_TEMP_FF_TAB;\n\n'
-  parsedData.value.forEach(row => {
-    sql += `INSERT INTO BL_HR_TEMP_FF_TAB (PERSON_ID, DOMAIN_ID, WORK_ORG_ID, PAY_DOMAIN_ID, PAY_ORG_ID, POST_CODE, SEGMENT_ID, POSI_DATE, REASON, PAYROLL_ID, KH_ORG_ID, HR_USER) VALUES ('${row.员工编号}', '${row.调后域}', '${row.调后部门ID}', '${row.调后工资发放域}', '${row.调后工资发放部门ID}', '${row.调后岗位编码}', '${row.调后板块}', TO_DATE('${row.调岗日期}', 'YYYY-MM-DD'), '${row.原因}', '${row.调后工资表ID}', '${row.文员绩效考核部门ID}', '${row.人力专员}');\n`
-  })
-  sql += '\nCOMMIT;'
+  let sql = '-- 步骤 1：校验并全量预检受影响员工状态 (Bl_Hr_Personnel_Tab)\n'
+  const empNos = parsedData.value.map(r => `'${r.员工编号}'`).join(',')
+  sql += `SELECT T1.Emp_No AS 员工工号, T1.p_Id AS 人员ID, T1.Contract AS 调前域, T1.Dept_Id AS 调前部门, T1.Post_Code AS 调前岗位 FROM Bl_Hr_Personnel_Tab T1 WHERE T1.Emp_No IN (${empNos});`
   return sql
 })
 
 const step2Sql = computed(() => {
   if (parsedData.value.length === 0) return '-- 暂无调岗数据'
   let startId = maxIdInput.value
-  let sql = `-- 步骤 2：生成并导入正式调岗记录 (基准最大 ID: ${startId})\n`
+  let sql = `-- 步骤 2：基于员工主表动态关联生成 Bl_Hr_Per_Change_Tab 批量变更 SQL (起始 ID: ${startId})\n`
   parsedData.value.forEach(row => {
     startId++
-    sql += `INSERT INTO BL_HR_PER_CHANGE_TAB (ID, PERSON_ID, TO_DOMAIN_ID, TO_WORK_ORG_ID, TO_PAY_DOMAIN_ID, TO_PAY_ORG_ID, TO_POST_CODE, TO_SEGMENT_ID, CHANGE_DATE, REASON, TO_PAYROLL_ID, TO_KH_ORG_ID, HR_USER, STATUS) VALUES (${startId}, '${row.员工编号}', '${row.调后域}', '${row.调后部门ID}', '${row.调后工资发放域}', '${row.调后工资发放部门ID}', '${row.调后岗位编码}', '${row.调后板块}', TO_DATE('${row.调岗日期}', 'YYYY-MM-DD'), '${row.原因}', '${row.调后工资表ID}', '${row.文员绩效考核部门ID}', '${row.人力专员}', '0');\n`
+    const empNo = row.员工编号
+    const postCode = row.调后岗位编码
+    const changeDate = row.调岗日期
+    const hrUser = row.人力专员 || 'SYSTEM'
+    const reason = row.原因 || '2026年集团任职资格认证调整'
+    const deptId = row.调后部门ID
+    const contract = row.调后域
+    const wageContract = row.调后工资发放域 || contract
+    const wageDept = row.调后工资发放部门ID || deptId
+    const unit = row.调后板块 || '120'
+    const pwId = row.调后工资表ID || ''
+    const kpiDeptId = row.文员绩效考核部门ID || deptId
+
+    sql += `Insert Into Bl_Hr_Per_Change_Tab (id, p_id, f_contract, f_dept_id, f_post_code, t_contract, t_dept_id, t_post_code, change_date, remark, enter_user, enter_date, change_reason, flag, f_unit, f_emptype, f_operatortype, f_pw_id, f_wage_contract, f_wage_dept, t_unit, t_emptype, t_operatortype, t_wage_contract, t_wage_dept, mail_flag, emp_no, f_jobtype, f_selltype, t_jobtype, t_selltype, change_type, the_phone, the_telephone, f_post_type, f_feevest, t_post_type, t_feevest, t_pw_id, state, f_kpi_dept_id, t_kpi_dept_id, if_real_shortage, hr_confirm_user, hr_update_flag) ` +
+      `Select ${startId}, T1.p_Id, T1.Contract, T1.Dept_Id, T1.Post_Code, '${contract}', '${deptId}', Nvl('${postCode}', T1.Post_Code), To_Date('${changeDate}', 'yyyy-mm-dd'), '', '${hrUser}', Sysdate, '${reason}', '1', T1.Unit, T1.Emptype, T1.Operatortype, T1.Pw_Id, Nvl(T1.Wage_Contract, T1.Contract), Nvl(T1.Wage_Dept, T1.Dept_Id), '${unit}', T1.Emptype, T1.Operatortype, '${wageContract}', '${wageDept}', '0', '${empNo}', T1.Jobtype, T1.Selltype, T1.Jobtype, T1.Selltype, '2', '', T1.Mobilephone, Bl_Post_Api.Get_Post_Type(T1.Post_Code), T1.Feevest, Bl_Post_Api.Get_Post_Type(Nvl('${postCode}', T1.Post_Code)), Bl_Workshop_Api.Get_Feevest(Nvl(To_Number('${deptId}'), T1.Dept_Id)), Nvl('${pwId}', T1.Pw_Id), '1', T1.Kpi_Dept_Id, '${kpiDeptId}', '1', '${hrUser}', '0' From Bl_Hr_Personnel_Tab T1 Where T1.Emp_No = '${empNo}';\n`
   })
   sql += '\nCOMMIT;'
   return sql
@@ -1384,12 +1396,12 @@ const step2Sql = computed(() => {
 
 const step3Sql = computed(() => {
   if (parsedData.value.length === 0) return '-- 暂无调岗数据'
-  const empIds = parsedData.value.map(r => `'${r.员工编号}'`).join(',')
-  return `-- 步骤 3：查询受调岗影响的员工当前真实数据做备份\nSELECT A.PERSON_ID AS 员工编号, A.PERSON_NAME AS 员工姓名, A.WORK_ORG_ID AS 工作所在部门id, B.ORG_DESC AS 工作所在部门描述, A.POST_CODE AS 岗位编码, C.POST_NAME AS 岗位描述, A.DOMAIN_ID AS 工作所在域, A.PAYROLL_ID AS 调前工资表id FROM BL_HR_PERSON_TAB A LEFT JOIN BL_HR_ORG_TAB B ON A.WORK_ORG_ID = B.ORG_ID LEFT JOIN BL_HR_POST_TAB C ON A.POST_CODE = C.POST_CODE WHERE A.PERSON_ID IN (${empIds});`
+  const empNos = parsedData.value.map(r => `'${r.员工编号}'`).join(',')
+  return `-- 步骤 3：调岗前完整对照与历史备份查询\nSELECT T1.Emp_No AS 员工工号, T1.p_Id AS 人员ID, T1.Contract AS 当前域, T1.Dept_Id AS 当前部门ID, T1.Post_Code AS 当前岗位编码, T1.Wage_Contract AS 当前发薪域, T1.Wage_Dept AS 当前发薪部门, T1.Pw_Id AS 当前工资表ID FROM Bl_Hr_Personnel_Tab T1 WHERE T1.Emp_No IN (${empNos});`
 })
 
 const step4Sql = computed(() => {
-  return `-- 步骤 4：调用存储过程，执行最终批量划转\nBEGIN\n  BL_HR_BATCH_PERSON_CHANGE_PROC('${dbConfig.value.hrUser || 'SYSTEM'}');\nEND;\n/`
+  return `-- 步骤 4：调用官方底层 Api 存储过程包自动完成划转生效\nBEGIN\n  Bl_Hr_Per_Change_Api.Auto_To_Update_Hrm__(0, null, 1);\nEND;\n/`
 })
 
 const copyText = async (text: string) => {
