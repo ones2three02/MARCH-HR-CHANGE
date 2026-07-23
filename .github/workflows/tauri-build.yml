@@ -37,7 +37,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Install Frontend Dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build & Publish Tauri Desktop Client
         uses: tauri-apps/tauri-action@v0
