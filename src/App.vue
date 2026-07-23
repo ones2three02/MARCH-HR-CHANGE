@@ -360,9 +360,14 @@
 
             <!-- Tab 3: 分步操作控制台 -->
             <div v-show="activeTab === 'wizard'" class="stage-pane">
-              <h3 class="stage-title">
-                <el-icon class="stage-title-icon"><Cpu /></el-icon> 分步调岗向导工作台
-              </h3>
+              <div style="display: flex; justify-content: space-between; align-items: center;" class="stage-header-bar">
+                <h3 class="stage-title" style="margin: 0;">
+                  <el-icon class="stage-title-icon"><Cpu /></el-icon> 分步调岗向导工作台
+                </h3>
+                <el-button type="success" size="default" class="btn-success-glow" @click="downloadFullSqlScript" icon="Download">
+                  📥 一键下载全流程 .sql 脚本
+                </el-button>
+              </div>
 
               <!-- 4 步骤极简 Node 流 -->
               <div class="wizard-stepper-bar">
@@ -774,7 +779,7 @@ import UpdateModal from './components/UpdateModal.vue'
 
 // --- 在线更新状态与方法 ---
 const updateModalVisible = ref(false)
-const appVersion = ref('1.0.18')
+const appVersion = ref('1.0.19')
 const hasNewUpdate = ref(false)
 
 const openUpdateModal = () => {
@@ -1405,6 +1410,39 @@ const step3Sql = computed(() => {
 const step4Sql = computed(() => {
   return `-- 步骤 4：调用官方底层 Api 存储过程包自动完成划转生效\nBEGIN\n  Bl_Hr_Per_Change_Api.Auto_To_Update_Hrm__(0, null, 1);\nEND;\n/`
 })
+
+const fullCombinedSql = computed(() => {
+  return `-- ========================================================\n` +
+    `-- 批量调岗全流程 Oracle 标准执行脚本 (.sql)\n` +
+    `-- 数据量: ${parsedData.value.length} 条记录\n` +
+    `-- 生成时间: ${new Date().toLocaleString()}\n` +
+    `-- ========================================================\n\n` +
+    `${step1Sql.value}\n\n` +
+    `-- --------------------------------------------------------\n\n` +
+    `${step2Sql.value}\n\n` +
+    `-- --------------------------------------------------------\n\n` +
+    `${step3Sql.value}\n\n` +
+    `-- --------------------------------------------------------\n\n` +
+    `${step4Sql.value}\n`
+})
+
+const downloadFullSqlScript = () => {
+  if (parsedData.value.length === 0) {
+    ElMessage.warning('暂无数据，请先导入并校验 Excel 调岗数据！')
+    return
+  }
+  const blob = new Blob([fullCombinedSql.value], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `批量调岗全流程脚本_${new Date().toISOString().slice(0, 10)}.sql`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  ElMessage.success('全流程 SQL 脚本已成功一键导出下载！')
+  addAuditLog('导出全流程SQL脚本', 'Success', `成功导出 ${parsedData.value.length} 条数据的完整 .sql 文件`)
+}
 
 const copyText = async (text: string) => {
   try {
