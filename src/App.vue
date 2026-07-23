@@ -774,7 +774,7 @@ import UpdateModal from './components/UpdateModal.vue'
 
 // --- 在线更新状态与方法 ---
 const updateModalVisible = ref(false)
-const appVersion = ref('1.0.17')
+const appVersion = ref('1.0.18')
 const hasNewUpdate = ref(false)
 
 const openUpdateModal = () => {
@@ -1359,12 +1359,14 @@ const resetWizard = () => {
   ElMessage.success('批量调岗流程顺利完成，已重置向导！')
 }
 
-// SQL 文本计算属性 (基于原厂 Oracle 真实生产表结构 Bl_Hr_Per_Change_Tab & Bl_Hr_Personnel_Tab)
+// SQL 文本计算属性 (基于原厂真正的临时表 Bl_Hr_Temp_Ff_Tab 与 Col1~Col13 列结构)
 const step1Sql = computed(() => {
   if (parsedData.value.length === 0) return '-- 暂无调岗数据'
-  let sql = '-- 步骤 1：校验并全量预检受影响员工状态 (Bl_Hr_Personnel_Tab)\n'
-  const empNos = parsedData.value.map(r => `'${r.员工编号}'`).join(',')
-  sql += `SELECT T1.Emp_No AS 员工工号, T1.p_Id AS 人员ID, T1.Contract AS 调前域, T1.Dept_Id AS 调前部门, T1.Post_Code AS 调前岗位 FROM Bl_Hr_Personnel_Tab T1 WHERE T1.Emp_No IN (${empNos});`
+  let sql = '-- 步骤 1：清空并全量导入临时表 Bl_Hr_Temp_Ff_Tab\nDELETE FROM Bl_Hr_Temp_Ff_Tab;\n\n'
+  parsedData.value.forEach(row => {
+    sql += `INSERT INTO Bl_Hr_Temp_Ff_Tab (Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col13) VALUES ('${row.员工编号}', '${row.调后域}', '${row.调后部门ID}', '${row.调后工资发放域}', '${row.调后工资发放部门ID}', '${row.调后岗位编码}', '${row.调后板块}', '${row.调岗日期}', '${row.原因}', '${row.调后工资表ID}', '${row.文员绩效考核部门ID}', '${row.人力专员}');\n`
+  })
+  sql += '\nCOMMIT;'
   return sql
 })
 
@@ -1430,14 +1432,14 @@ const executeStep1Direct = async () => {
   addConsoleLog(`即将导入 ${parsedData.value.length} 条记录至 Oracle 临时表`)
 
   try {
-    const delRes = await api.dbQuery(dbConfig.value, 'DELETE FROM BL_HR_TEMP_FF_TAB')
+    const delRes = await api.dbQuery(dbConfig.value, 'DELETE FROM Bl_Hr_Temp_Ff_Tab')
     if (!delRes.success) throw new Error(delRes.message)
-    addConsoleLog('已清空历史临时表数据 (DELETE FROM BL_HR_TEMP_FF_TAB)', 'success')
+    addConsoleLog('已清空历史临时表数据 (DELETE FROM Bl_Hr_Temp_Ff_Tab)', 'success')
     progressPercent.value = 30
 
     const sqls: string[] = []
     parsedData.value.forEach(row => {
-      sqls.push(`INSERT INTO BL_HR_TEMP_FF_TAB (PERSON_ID, DOMAIN_ID, WORK_ORG_ID, PAY_DOMAIN_ID, PAY_ORG_ID, POST_CODE, SEGMENT_ID, POSI_DATE, REASON, PAYROLL_ID, KH_ORG_ID, HR_USER) VALUES ('${row.员工编号}', '${row.调后域}', '${row.调后部门ID}', '${row.调后工资发放域}', '${row.调后工资发放部门ID}', '${row.调后岗位编码}', '${row.调后板块}', TO_DATE('${row.调岗日期}', 'YYYY-MM-DD'), '${row.原因}', '${row.调后工资表ID}', '${row.文员绩效考核部门ID}', '${row.人力专员}')`)
+      sqls.push(`INSERT INTO Bl_Hr_Temp_Ff_Tab (Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col13) VALUES ('${row.员工编号}', '${row.调后域}', '${row.调后部门ID}', '${row.调后工资发放域}', '${row.调后工资发放部门ID}', '${row.调后岗位编码}', '${row.调后板块}', '${row.调岗日期}', '${row.原因}', '${row.调后工资表ID}', '${row.文员绩效考核部门ID}', '${row.人力专员}')`)
     })
 
     const batchRes = await api.dbExecuteBatch(dbConfig.value, sqls)
