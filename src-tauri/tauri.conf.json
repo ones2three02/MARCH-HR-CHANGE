@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "batch-person-change",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "identifier": "com.croodslee.batchpersonchange",
   "build": {
     "frontendDist": "../dist",
@@ -25,7 +25,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "dmg"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,6 +36,11 @@
     "resources": [
       "../server-backend/**/*"
     ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
     "macOS": {
       "entitlements": null
     }
