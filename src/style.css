@@ -1278,3 +1278,131 @@ body {
   font-weight: 600 !important;
 }
 
+/* ==================================================== */
+/* 5. 侧边栏软件版本与更新卡片 (Sidebar Update Card) */
+/* ==================================================== */
+.sidebar-update-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  cursor: pointer;
+  transition: var(--transition-spring);
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="light"] .sidebar-update-card {
+  background: rgba(79, 70, 229, 0.04);
+  border-color: rgba(79, 70, 229, 0.12);
+}
+
+.sidebar-update-card:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+}
+
+.update-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.update-icon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  transition: var(--transition-spring);
+}
+
+.update-icon-box.has-badge {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--danger-color);
+}
+
+.update-card-icon {
+  font-size: 15px;
+}
+
+.update-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.update-version-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.update-status-label {
+  font-size: 10.5px;
+  color: var(--accent-color);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.update-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger-color);
+  box-shadow: 0 0 0 3px var(--danger-glow);
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(244, 63, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+}
+
+/* ==================================================== */
+/* 6. 全局弹窗与 Element Plus Dialog 高级美化 */
+/* ==================================================== */
+.update-dialog-custom .el-dialog {
+  border-radius: 20px !important;
+  background: var(--bg-bezel-core) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-soft) !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.update-dialog-custom .el-dialog__header {
+  padding: 0 !important;
+  margin-right: 0 !important;
+}
+
+.update-dialog-custom .el-dialog__body {
+  padding: 24px 24px 12px 24px !important;
+}
+
+.update-dialog-custom .el-dialog__footer {
+  padding: 16px 24px 24px 24px !important;
+  border-top: 1px solid var(--border-color-extra-light) !important;
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+

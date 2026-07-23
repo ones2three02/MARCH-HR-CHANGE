@@ -12,10 +12,45 @@ fn get_node_log() -> Result<String, String> {
   }
 }
 
+#[tauri::command]
+fn get_app_version(app: tauri::AppHandle) -> String {
+  app.package_info().version.to_string()
+}
+
+#[tauri::command]
+fn run_installer(_app: tauri::AppHandle, file_path: String) -> Result<(), String> {
+  let path = std::path::Path::new(&file_path);
+  if !path.exists() {
+    return Err(format!("安装包文件不存在: {}", file_path));
+  }
+
+  #[cfg(target_os = "windows")]
+  {
+    let _ = Command::new("cmd")
+      .args(["/C", "start", "", &file_path])
+      .spawn()
+      .or_else(|_| Command::new(&file_path).spawn())
+      .map_err(|e| e.to_string())?;
+
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    _app.exit(0);
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "windows"))]
+  {
+    Command::new("open")
+      .arg(&file_path)
+      .spawn()
+      .map_err(|e| e.to_string())?;
+    Ok(())
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![get_node_log])
+    .invoke_handler(tauri::generate_handler![get_node_log, get_app_version, run_installer])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

@@ -60,6 +60,20 @@
           </div>
           
           <div class="sidebar-bottom">
+            <!-- 软件版本与在线更新检测卡片 -->
+            <div class="sidebar-update-card" @click="openUpdateModal" title="点击检测系统在线更新">
+              <div class="update-card-left">
+                <div class="update-icon-box" :class="{ 'has-badge': hasNewUpdate }">
+                  <el-icon class="update-card-icon"><Download /></el-icon>
+                </div>
+                <div class="update-card-info">
+                  <span class="update-version-label">软件版本 v{{ appVersion }}</span>
+                  <span class="update-status-label">{{ hasNewUpdate ? '发现新版本可用 ➔' : '检测在线更新 ➔' }}</span>
+                </div>
+              </div>
+              <span class="update-pulse-dot" v-if="hasNewUpdate" title="发现新版本可用"></span>
+            </div>
+
             <!-- 主题一键切换卡 -->
             <button class="theme-switch-btn" @click="toggleTheme" style="width: 100%; margin-bottom: 12px;">
               <span class="theme-icon-container">
@@ -631,6 +645,13 @@
       </div>
     </div>
 
+    <!-- 系统在在线更新模态框 -->
+    <UpdateModal 
+      v-model="updateModalVisible" 
+      :current-version="appVersion" 
+      @update-found="handleUpdateFound" 
+    />
+
   </div>
 </template>
 
@@ -639,6 +660,20 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
 import { invoke } from '@tauri-apps/api/core'
+import UpdateModal from './components/UpdateModal.vue'
+
+// --- 在线更新状态与方法 ---
+const updateModalVisible = ref(false)
+const appVersion = ref('1.0.11')
+const hasNewUpdate = ref(false)
+
+const openUpdateModal = () => {
+  updateModalVisible.value = true
+}
+
+const handleUpdateFound = (hasUpdate: boolean) => {
+  hasNewUpdate.value = hasUpdate
+}
 
 // --- 轻量 Web API 代理层 ---
 const getApiUrl = (path: string) => {
@@ -1242,6 +1277,14 @@ const runProcessWithConsole = async (
 
 // --- 生命钩子 ---
 onMounted(async () => {
+  // 0. 获取系统真实版本
+  try {
+    const ver = await invoke<string>('get_app_version')
+    if (ver) appVersion.value = ver
+  } catch (e) {
+    console.log('Running web or fallback mode version:', appVersion.value)
+  }
+
   // 1. 初始化主题
   const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
   if (savedTheme) {
