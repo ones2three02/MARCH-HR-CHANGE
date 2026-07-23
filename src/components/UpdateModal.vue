@@ -203,8 +203,6 @@ const customUpdateUrl = ref(
   'https://api.github.com/repos/ones2three02/MARCH-HR-CHANGE/releases/latest'
 )
 
-const downloadedFilePath = ref('')
-
 const updateInfo = ref({
   latestVersion: '',
   releaseNotes: '',
@@ -361,18 +359,24 @@ async function startDownload() {
       }
     }
 
+    const totalLength = receivedLength
+    const mergedArray = new Uint8Array(totalLength)
+    let offset = 0
+    for (const chunk of chunks) {
+      mergedArray.set(chunk, offset)
+      offset += chunk.length
+    }
+
+    downloadedBytes.value = mergedArray
+
     downloadProgress.value = 100
     downloadStatusText.value = '更新文件校验完成！'
     isDownloading.value = false
     downloadCompleted.value = true
 
-    const blob = new Blob(chunks, { type: 'application/octet-stream' })
-    const tempBlobUrl = URL.createObjectURL(blob)
-    downloadedFilePath.value = tempBlobUrl
-
-    ElMessage.success('升级包下载完成，准备启动安装！')
+    ElMessage.success('升级包下载完成，可立即启动安装！')
   } catch (err: any) {
-    console.warn('流式下载受限:', err)
+    console.warn('下载处理:', err)
     downloadProgress.value = 100
     isDownloading.value = false
     downloadCompleted.value = true
@@ -380,29 +384,38 @@ async function startDownload() {
   }
 }
 
-// 触发 Windows 安装包执行与应用退出
+const downloadedBytes = ref<Uint8Array | null>(null)
+
+// 触发 Windows 安装包真实执行与应用退出
 async function triggerInstallation() {
   try {
-    if (downloadedFilePath.value) {
-      const a = document.createElement('a')
-      a.href = downloadedFilePath.value
-      a.download = updateInfo.value.fileName || `batch-person-change-v${updateInfo.value.latestVersion}.exe`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    }
-
+    let tauriInvoked = false
     try {
       const tauriCore = await import('@tauri-apps/api/core')
-      await tauriCore.invoke('run_installer', { filePath: updateInfo.value.fileName })
+      if (downloadedBytes.value && downloadedBytes.value.length > 0) {
+        downloadStatusText.value = '正在拉起 Windows 安装程序...'
+        await tauriCore.invoke('save_and_run_installer', { 
+          bytes: Array.from(downloadedBytes.value), 
+          fileName: updateInfo.value.fileName || `batch_setup_v${updateInfo.value.latestVersion}.exe` 
+        })
+        tauriInvoked = true
+      } else if (updateInfo.value.downloadUrl) {
+        await tauriCore.invoke('download_and_install_url', { url: updateInfo.value.downloadUrl })
+        tauriInvoked = true
+      }
     } catch (e) {
-      console.warn('Tauri run_installer invoke:', e)
+      console.warn('非 Tauri 环境或原生调用降级:', e)
     }
 
-    ElMessage.info('正在启动升级安装程序，请按提示完成覆写安装...')
+    if (!tauriInvoked && updateInfo.value.downloadUrl) {
+      // 浏览器 Web 端降级触发下载
+      window.open(updateInfo.value.downloadUrl, '_blank')
+    }
+
+    ElMessage.info('正在启动安装程序，即将退出当前系统完成更新...')
     dialogVisible.value = false
   } catch (e: any) {
-    ElMessage.error(`拉起安装程序失败: ${e.message || e}`)
+    ElMessage.error(`启动安装程序失败: ${e.message || e}`)
   }
 }
 

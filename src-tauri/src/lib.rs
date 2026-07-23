@@ -47,10 +47,78 @@ fn run_installer(_app: tauri::AppHandle, file_path: String) -> Result<(), String
   }
 }
 
+#[tauri::command]
+fn save_and_run_installer(_app: tauri::AppHandle, bytes: Vec<u8>, file_name: String) -> Result<(), String> {
+  let temp_path = std::env::temp_dir().join(&file_name);
+  std::fs::write(&temp_path, bytes).map_err(|e| format!("写入临时安装文件失败: {}", e))?;
+  let path_str = temp_path.to_string_lossy().to_string();
+
+  #[cfg(target_os = "windows")]
+  {
+    let _ = Command::new("cmd")
+      .args(["/C", "start", "", &path_str])
+      .spawn()
+      .or_else(|_| Command::new(&path_str).spawn())
+      .map_err(|e| format!("启动安装程序失败: {}", e))?;
+
+    let app_handle = _app.clone();
+    std::thread::spawn(move || {
+      std::thread::sleep(std::time::Duration::from_millis(800));
+      app_handle.exit(0);
+    });
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "windows"))]
+  {
+    Command::new("open")
+      .arg(&path_str)
+      .spawn()
+      .map_err(|e| format!("打开安装文件失败: {}", e))?;
+    Ok(())
+  }
+}
+
+#[tauri::command]
+fn download_and_install_url(_app: tauri::AppHandle, url: String) -> Result<(), String> {
+  let temp_exe = std::env::temp_dir().join("batch_person_change_installer.exe");
+  let temp_str = temp_exe.to_string_lossy().to_string();
+
+  #[cfg(target_os = "windows")]
+  {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    
+    let ps_cmd = format!(
+      "$ProgressPreference = 'SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'; Start-Process -FilePath '{}'",
+      url, temp_str, temp_str
+    );
+
+    Command::new("powershell")
+      .creation_flags(CREATE_NO_WINDOW)
+      .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps_cmd])
+      .spawn()
+      .map_err(|e| format!("下载安装包失败: {}", e))?;
+
+    let app_handle = _app.clone();
+    std::thread::spawn(move || {
+      std::thread::sleep(std::time::Duration::from_millis(1500));
+      app_handle.exit(0);
+    });
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "windows"))]
+  {
+    let _ = Command::new("open").arg(&url).spawn();
+    Ok(())
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![get_node_log, get_app_version, run_installer])
+    .invoke_handler(tauri::generate_handler![get_node_log, get_app_version, run_installer, save_and_run_installer, download_and_install_url])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

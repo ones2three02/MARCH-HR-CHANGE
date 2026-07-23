@@ -779,7 +779,7 @@ import UpdateModal from './components/UpdateModal.vue'
 
 // --- 在线更新状态与方法 ---
 const updateModalVisible = ref(false)
-const appVersion = ref('1.0.19')
+const appVersion = ref('1.0.20')
 const hasNewUpdate = ref(false)
 
 const openUpdateModal = () => {
