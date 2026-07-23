@@ -774,7 +774,7 @@ import UpdateModal from './components/UpdateModal.vue'
 
 // --- 在线更新状态与方法 ---
 const updateModalVisible = ref(false)
-const appVersion = ref('1.0.15')
+const appVersion = ref('1.0.16')
 const hasNewUpdate = ref(false)
 
 const openUpdateModal = () => {
@@ -940,7 +940,7 @@ interface DbProfile {
 const defaultProfiles: DbProfile[] = [
   {
     id: 'default-prod',
-    name: 'PROD 生产环境',
+    name: 'PROD 生产环境 (SQL 导出模式)',
     host: '10.10.10.1',
     port: '1521',
     user: 'HR_PROD',
@@ -949,11 +949,11 @@ const defaultProfiles: DbProfile[] = [
     serviceName: 'ORCL_PROD',
     sid: '',
     hrUser: '31430614',
-    directMode: true
+    directMode: false
   },
   {
     id: 'default-test',
-    name: 'TEST 测试环境',
+    name: 'TEST 测试环境 (SQL 导出模式)',
     host: '127.0.0.1',
     port: '1521',
     user: 'SYSTEM',
@@ -962,7 +962,7 @@ const defaultProfiles: DbProfile[] = [
     serviceName: '',
     sid: 'helowin',
     hrUser: '31430614',
-    directMode: true
+    directMode: false
   }
 ]
 
